@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./../css/style.css">
+    
+    <title>Document</title>
+</head>
+<body>
+    <div class="fe-container">
+        <h1>Todo</h1>
+        <div id="fe-input-add">
+            <input type="text" id="fe-new-todo" placeholder="할 일 추가하기" onkeydown="keydown(event)">
+            <button type="button" id="fe-add-btn">
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <ul id="fe-todo-list"></ul>
+        <div id="fe-delete-btn">
+            <button onclick="allDeleteTodoList()">전체 삭제</button> 
+        </div>
+    </div>
+    <script src="./../script/todo_list.js"></script>
+</body>
+</html>
