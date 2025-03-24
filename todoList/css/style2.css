@@ -1,0 +1,180 @@
+* {
+	box-sizing: border-box;
+}
+
+body {
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    min-height: 100vh;
+}
+
+h1 #change{
+    margin: 0;
+    margin-bottom: 12px;
+}
+
+.fe-container {
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+}
+
+.fe-input-add .fe-new-todo {
+    width: calc(100% - 45px);
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.fe-input-add .fe-new-todo:focus {
+    outline: none;
+}
+
+.fe-input-add .fe-new-todo:focus {
+    outline: none;
+}
+
+.fe-input-add .fe-add-btn {
+    position: relative;
+    width: 35px;
+    height: 35px;
+    border: none;
+    background-color: #242423;
+    border-radius: 4px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.fe-input-add .fe-add-btn span {
+    display: block;
+    width: 2px;
+    height: 15px;
+    background-color: #FFE8AD;
+    position: absolute;
+    transform: translate(-50%,-50%);
+    top: 50%;
+    left: 50%;
+}
+.fe-input-add .fe-add-btn span:last-child {
+    transform: translate(-50%,-50%) rotate(-90deg);
+}
+
+.fe-todo-list {
+    list-style: none;
+    margin: 0;
+    padding: 10px;
+    text-align: left;
+}
+
+.fe-todo-list li {
+    padding: 10px 0;
+    user-select: none;
+}
+
+.fe-todo-list button {
+    width: 15px;
+    height: 15px;
+    margin-right: 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.complete {
+    text-decoration: line-through;  /* 완료된 할 일에 취소선 */
+    color: gray;
+}
+/* 기본 버튼 스타일 */
+li button {
+    width: 20px;
+    height: 20px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
+
+  /* complete 클래스가 붙으면 색 바꾸기 */
+.fe-todo-list li.complete .fe-checked {
+    background-color: #242423;
+}
+
+  /* complete 클래스가 붙으면 색 바꾸기 */
+  .fe-todo-list li.complete .fe-checked {
+    background-color: #242423;
+}
+
+.fe-delete-btn button {
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background-color: #242423;
+    color: #fff;
+    padding: 8px;
+}
+
+.fe-list-delete {
+    background: none;
+    border: none;
+    color: red;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.fe-todo-list li {
+    display: flex;
+    justify-content: space-between; /* 좌우 끝으로 정렬 */
+    align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+.todo-deadline {
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+}
+.day {
+    background-color: white;
+    color : black;
+}
+
+.night {
+    background-color: black;
+    color: white;
+}
+
+.fe-container {
+    padding: 20px;
+}
+
+.fe-header {
+    display: flex;
+    justify-content: space-between;  /* 양쪽 끝에 배치 */
+    align-items: center;             /* 수직 정렬 */
+}
+
+.fe-header h1 {
+    margin: 0;  /* 여백 제거 */
+}
+
+#change {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    cursor: pointer;
+    
+    background-color: #333;       /* 배경색 (어두운 느낌) */
+    color: #fff;                  /* 글자색 (하얀색) */
+    border: none;
+    border-radius: 25px;          /* 둥근 버튼 */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* 약간의 그림자 효과 */
+    transition: all 0.3s ease;    /* 부드러운 효과 */
+}
+
+#change:hover {
+    background-color: #555;       /* 호버 시 색상 변화 */
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
