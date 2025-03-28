@@ -85,10 +85,14 @@ function bindEvent() {
 }
 
 // 매개변수가 필요한 event 처리
-function bindLiEvent(li, span, btn, deleteBtn){
+function bindLiEvent(li, span, btn, deleteBtn, dateInfo){
     // 더블 클릭(li tag)에 있는 데이터 수정 함수 실행
     span.addEventListener('dblclick', function () {
         dblClickEvent(span);
+    });
+
+    dateInfo.addEventListener('dblclick', function () {
+        dblClickEvent(dateInfo);
     });
 
     btn.addEventListener('click', () => {
@@ -116,7 +120,7 @@ function storageSaveItem () {
         let dueDate = '';
 
         if (dateElem) {
-            dueDate = dateElem.textContent.replace('기안일: ', '');  // 날짜만 추출
+            dueDate = dateElem.textContent.replace('', '');  // 날짜만 추출
         }
 
         // 저장용 객체
@@ -145,7 +149,9 @@ function dblClickEvent (spanElement) {
     if (newText !== null && newText.trim() !== '') {
         spanElement.textContent = newText.trim();
     }
+    location.reload();
     storageSaveItem();
+    
 }
 
 // 전체 삭제 기능
@@ -163,16 +169,21 @@ function removeList(li, diffDays) {
     }
 }
 
-// 
-function checkDeadline(li) {
+function checkDate(li) {
     const dueDate = li.getAttribute('data-due-date');
     if (!dueDate) return;
 
     const now = new Date();
     const due = new Date(dueDate);
     const diffTime = due - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24) - 1);
-    console.log('diffDays::', due);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays
+}
+
+
+// 
+function checkDeadline(li) {
+    diffDays = checkDate(li);
     console.log('diffDays::', diffDays);
 
     if (diffDays <= 3) {
@@ -185,7 +196,6 @@ function checkDeadline(li) {
         li.className = 'complete';
         alert('todo list 중 기안이 만료된 list가 있습니다. 기안이 만료되어 "완료"처리 되었습니다.');
     }
-    removeList(li, diffDays);
     storageSaveItem();
 }
 
@@ -208,6 +218,18 @@ function createTodoList (storageItem) {
         dueDate = storageItem.dueDate;  // 저장된 기안일 불러오기
     } else {
         dueDate = prompt("기안일을 입력하세요. (예: 2025-03-31)", "");  // 직접 입력받기
+        dueDate = dueDate.split('.');
+        console.log('dueDate', dueDate)
+        while (true) {
+            const now = new Date();
+            const due = new Date(dueDate);
+            let diffDays = Math.ceil((due - now) / (1000 * 60 * 60 * 24));
+        
+            if (diffDays >= 0) break;  // ✅ diffDays가 0 이상이면 루프 종료
+        
+            dueDate = prompt("날짜가 지났습니다. 다시 입력해주세요. (예: 2025-03-31)", "");  // ❗ 새로운 날짜 입력받기
+            if (!dueDate) break;  // 사용자가 취소하면 루프 종료
+        }
     }
     
     
@@ -217,7 +239,7 @@ function createTodoList (storageItem) {
     li.appendChild(deleteBtn);
 
     if (dueDate) {
-        dateInfo.textContent = `기안일: ${dueDate}`;
+        dateInfo.textContent = `${dueDate}`;
         dateInfo.className = 'fe-due-date';
         li.setAttribute('data-due-date', dueDate);
     }
@@ -235,7 +257,7 @@ function createTodoList (storageItem) {
     inputAdd.value = '';
 
     // 매개변수 필요한 event 호출 
-    bindLiEvent(li, span, btn, deleteBtn);
+    bindLiEvent(li, span, btn, deleteBtn, dateInfo);
 
     li.className = storageItem?.complete ? 'complete' : '';
     
