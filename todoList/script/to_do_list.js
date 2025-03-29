@@ -72,7 +72,7 @@ function bindEvent() {
     
     // Enter key event
     inputAdd.addEventListener('keydown', function(event) {
-        
+
         if (event.isComposing) {return;} // [보안] 한글 입력 중이면 무시
         
         if (event.code === 'Enter' && inputAdd.value !== '') {
@@ -127,7 +127,7 @@ function storageSaveItem () {
         // 저장용 객체
         const objList = {
             contents: span.textContent,
-            dueDate: dueDate,
+            dueDate: dueDate ? dueDate : null, // [보안]빈 값이면 null 저장
             complete: todoListUl.children[i].classList.contains('complete')
         };
 
@@ -164,12 +164,7 @@ function allDeleteTodoList () {
     storageSaveItem();
 }
 
-function removeList(li, diffDays) {
-    if (diffDays === 0) {
-        li.remove();
-    }
-}
-
+// 입력한 기안일 잘못 입력한 경우 처리
 function checkDate(li) {
     const dueDate = li.getAttribute('data-due-date');
     if (!dueDate) return;
@@ -182,10 +177,9 @@ function checkDate(li) {
 }
 
 
-// 
+// 기안일이 3일이내 이면 문자 색 붉은 색으로 변화
 function checkDeadline(li) {
     diffDays = checkDate(li);
-    console.log('diffDays::', diffDays);
 
     if (diffDays <= 3) {
         li.querySelector('span').style.color = 'red';
@@ -220,7 +214,7 @@ function createTodoList (storageItem) {
     } else {
         dueDate = prompt("기안일을 입력하세요. (예: 2025-03-31)", "");  // 직접 입력받기
         dueDate = dueDate.split('.');
-        console.log('dueDate', dueDate)
+
         while (true) {
             const now = new Date();
             const due = new Date(dueDate);
