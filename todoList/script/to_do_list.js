@@ -72,7 +72,8 @@ function bindEvent() {
     
     // Enter key event
     inputAdd.addEventListener('keydown', function(event) {
-        if (isComposing) {return;}
+        
+        if (event.isComposing) {return;} // [보안] 한글 입력 중이면 무시
         
         if (event.code === 'Enter' && inputAdd.value !== '') {
             createTodoList();
