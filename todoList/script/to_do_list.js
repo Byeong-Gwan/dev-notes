@@ -20,6 +20,7 @@ let isComposing = false;
 // storage 데이터 저장
 const storageItem = JSON.parse(localStorage.getItem('save-items')); 
 
+// 라이트/다크 모두 전환에 
 const change = document.querySelector("#change");
 
 // 다크&라이트 모드 전환을 위해 body 전체를 가져옴
