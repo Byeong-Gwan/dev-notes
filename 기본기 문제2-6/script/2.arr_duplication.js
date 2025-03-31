@@ -33,4 +33,4 @@
         }
     }
 
-    console.log('weew', arr);
+    console.log('arr: ', arr);
