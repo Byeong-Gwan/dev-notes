@@ -32,7 +32,7 @@
 
     function getNames (arr) {
         let arr2 = arr.map((e) => {
-           e.name;
+            return e.name;
         });
         return arr2;
     }
