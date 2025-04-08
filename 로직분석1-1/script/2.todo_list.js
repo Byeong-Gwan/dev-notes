@@ -12,7 +12,7 @@
 
 
  */
-
+ 
     (function () {
         // html에 있는 input, add-btn, list 태그의 id 값을 가져온다.
         const input = document.getElementById('input');
