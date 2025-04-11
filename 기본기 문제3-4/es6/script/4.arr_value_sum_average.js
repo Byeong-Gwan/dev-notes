@@ -20,5 +20,5 @@ function arrSumAverage (arr) {
     const avg = sum / arr.length;
     const result = `총합: ${sum}  평균: ${avg}`;
 
-    return result;
+    return result; 
 }
