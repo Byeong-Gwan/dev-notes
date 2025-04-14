@@ -13,19 +13,14 @@ const str = "hello world";
 console.log(strFlip(str));
 
 function strFlip (str) {
-    const arr = str.split(' ');
-    console.log('arr: ', arr);
-    let arr2 = []
-    let flipStr = '';
-    for (let i = 0; i < arr.length; i++) {
-        arr2.push(arr[i].split(''));
-        console.log('333',arr2)
-        for (let j = 0; j < arr2.length; j++) {
-            flipStr += arr2[j].reverse();
-        }
-        flipStr += ' ';
-    }
-    console.log('arr2: ', arr2[0]);
-    console.log('flipStr: ', flipStr);
+  // 문자열을 공백을 기준으로 단어로 분리
+  const words = str.split(' ');
     
+  // 각 단어를 뒤집고 다시 합치기
+  const reversedWords = words.map(word => {
+      return word.split('').reverse().join('');
+  });
+  
+  // 뒤집은 단어들을 공백으로 다시 합치기
+  return reversedWords.join(' ');
 }
