@@ -16,13 +16,20 @@
     console.log(dateFormat('2025-04-17'));
 
     
-    function dateFormat (data) {
-        let dateArr = data.split('-');
+    // function dateFormat (data) {
+    //     let dateArr = data.split('-');
 
-        for (let i =0; i < dateArr.length; i++) {
-            if (/^0/.test(dateArr[i])) {
-                dateArr[i] = dateArr[i].slice(1);
-            }
-        }
-        return `${dateArr[0]}년 ${dateArr[1]}월 ${dateArr[2]}일`;
+    //     for (let i =0; i < dateArr.length; i++) {
+    //         if (/^0/.test(dateArr[i])) {
+    //             dateArr[i] = dateArr[i].slice(1);
+    //         }
+    //     }
+    //     return `${dateArr[0]}년 ${dateArr[1]}월 ${dateArr[2]}일`;
+    // }
+
+    function dateFormat (dateStr) {
+        const [year, month, day] = dateStr.split('-').map(item => 
+            item.startsWith('0') ? item.slice(1) : item
+        );
+        return `${year}년 ${month}월 ${day}일`;
     }
