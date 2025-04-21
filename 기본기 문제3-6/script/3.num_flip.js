@@ -14,13 +14,15 @@
 
 console.log(numFlip(12345));
 
+/**
+ * 문자열 전환 없이 처리 방법
+ */
 function numFlip (num){
     let result = 0;
 
     while(num > 0) {
         let flip = num % 10;
         result = result * 10 + flip;
-        console.log('????', num);
         num = Math.floor(num/10);
     }
     return result;
