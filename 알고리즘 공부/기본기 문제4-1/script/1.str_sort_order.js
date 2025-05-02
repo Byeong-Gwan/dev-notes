@@ -25,7 +25,7 @@
         const arr2 = str2.split('');
         let result = [];
 
-        arr1.forEach((e, idx) => {
+        arr1.forEach((e) => {
             if (arr2.includes(e)) {
                 result.push(e);
             }
