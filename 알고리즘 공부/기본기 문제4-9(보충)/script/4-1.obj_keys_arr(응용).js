@@ -7,16 +7,16 @@
  */
 
     const obj = {a: {name: 'kbg', id: 1}, b: {name: 'ajs', id: 2}, c:{name: 'kng', id: 3}};
-    console.log(evenValueKeys(obj));
+    console.log(evenValueKeys(obj, true, 'name'));
 
-    function evenValueKeys(obj) {
+    function evenValueKeys(obj, asc, key) {
         const arr = Object.values(obj);
-        console.log('eee',arr)
 
         arr.sort((a, b) => {
-            if (a.name > b.name) return 1;
-            if (a.name < b.name) return -1;
-            return a.id - b.id;
+            if (typeof a[key] === 'string' || typeof b[key] === 'string') {
+                return (asc? a[key] > b[key]: a[key] < b[key]) ? 1 : -1;
+            }
+            return (a[key] - b[key]) * (asc ? 1 : -1);
         });
         return arr;
      }
