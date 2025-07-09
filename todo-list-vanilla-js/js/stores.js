@@ -19,6 +19,11 @@ export class Stores {
     }
   }
 
+  // 추가로 필요한 경우
+  getAll() {
+    return JSON.parse(localStorage.getItem(this.key));
+  }
+
   find (id, cb) {
     // localStorage 에 저장 된 문자열을 배열 및 객체로 변환해서 가져온다.
     const items = JSON.parse(localStorage.getItem(this.key));

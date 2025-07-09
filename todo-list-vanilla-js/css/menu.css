@@ -1,0 +1,140 @@
+body {
+    font-family: 'Pretendard', sans-serif;
+    background-color: #2d2a32;
+    color: #fff;
+    margin: 0;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  main {
+    width: 100%;
+    max-width: 700px;
+  }
+  
+  h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 28px;
+    color: #b3ffb3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+/* 🔧 네비게이션 바: 가운데 정렬 + 여백 */
+.navbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+  }
+  
+  
+  .tab-btn {
+    padding: 8px 16px;
+    border: none;
+    background-color: #eee;
+    color: #333;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s;
+  }
+  
+  .tab-btn.active {
+    background-color: #58cc7e;
+    color: #fff;
+  }
+  
+  .tab-btn:hover {
+    background-color: #d2d2d2;
+  }
+  
+ 
+/* 입력 영역도 간격 조정 */
+  section {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 40px;       /* 입력창 아래 여백 */
+    margin-top: 10px;          /* 네비게이션과의 간격 조정 */
+  }
+  
+  input[type="text"],
+  input[type="number"] {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: none;
+    font-size: 14px;
+    width: 160px;
+  }
+  
+  button#menu-add-btn {
+    background-color: #58cc7e;
+    border: none;
+    color: #fff;
+    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  button#menu-add-btn:hover {
+    background-color: #49b76d;
+  }
+  
+  /* 메뉴 리스트 */
+  #menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  li {
+    background-color: #3a3740;
+    padding: 14px 20px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .menu-name {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .menu-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .menu-actions button {
+    background-color: #58cc7e;
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .menu-actions button:hover {
+    background-color: #49b76d;
+  }
+  
+  .menu-actions .count {
+    font-size: 15px;
+    min-width: 18px;
+    text-align: center;
+  }
+  

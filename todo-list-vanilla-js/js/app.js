@@ -1,4 +1,5 @@
 import { $, qsa, each, pluralization, on, delegate, parent, nodeListEach } from './helpers.js';
+import { Stores } from './stores.js'; 
 
 // 키보드의 특정 키가 눌렸을 때 동작을 제어하기 위한 키 코드값 상수 선언
 const ENTER_KEY = 13;
@@ -29,10 +30,11 @@ class App{
 
 
   addEventListeners () {
-
+    // 브라우저 키 관련 이벤트
     on(this.$insert, 'keypress', this.onInsert.bind(this));
-
+    // 전체 checkBox 를 checked 로 처리 이벤트
     on(this.$toggleAll, 'click', this.onToggleAll.bind(this));
+    
     delegate(this.$list, '.toggle', 'click', this.onToggle.bind(this));
 
     delegate(this.$list, '.destroy', 'click', this.onDestroy.bind(this) );
@@ -109,25 +111,29 @@ class App{
     return $('[data-id="' + id + '"]');
   };
 
+  // 택스트 또는 브라우저 window keyCode 값이 같을때 이벤트 발생 기능
   onInsert ( event ) {
     let element = event.target;
-    const text = element.value.trim();
+    const text = element.value.trim(); // 공백 방지
     if( text && event.keyCode === ENTER_KEY ) {
-      this.insert(text);
-      element.value = '';
+      this.insert(text); // 조건에 부합하면 추가해준다.
+      element.value = ''; // 빈 값으로 초기화
     }
   };
 
+  // 전체 선택
   onToggleAll (event) {
+    // 전체 checkBox가 checked 되어 있는지 확인 
     const checked = event.target.checked;
     const self = this;
 
     this.stores.findAll(function( items ) {
+      // 반복을 통해서 completed 값을 checked 로 일괄 변경
       $.each( items, function( item ) {
         item.completed = checked;
-        self.stores.save( item, $.noop);
+        self.stores.save( item, $.noop); // 저장
       });
-      self.render();
+      self.render(); // 화면 다시 렌더링
     });
   };
 

@@ -1,0 +1,35 @@
+<!-- 옵션 선택 팝업 내용 -->
+<div class="option-popup-overlay">
+<div class="option-popup">
+    <h3>옵션 선택</h3>
+  
+    <div>
+      <strong>온도 선택 (필수):</strong><br />
+      <label><input type="radio" name="temp" value="Hot" /> Hot</label>
+      <label><input type="radio" name="temp" value="Ice" checked/> Ice</label>
+    </div>
+  
+    <div>
+      <strong>사이즈 선택 (필수):</strong><br />
+      <label><input type="radio" name="size" value="S" /> S</label>
+      <label><input type="radio" name="size" value="M" checked/> M</label>
+      <label><input type="radio" name="size" value="L" /> L</label>
+    </div>
+  
+    <div>
+      <strong>추가 옵션:</strong><br />
+      <label><input type="checkbox" value="샷 추가" /> 샷 추가</label>
+      <label><input type="checkbox" value="두유로 변경" /> 두유로 변경</label>
+    </div>
+  
+    <div>
+      <strong>기타 옵션:</strong><br />
+      <input type="text" id="custom-option" placeholder="예: 시럽 추가 등" />
+    </div>
+  
+    <div style="margin-top: 10px;">
+      <button id="option-confirm">확인</button>
+      <button id="option-cancel">취소</button>
+    </div>
+  </div>
+</div>
