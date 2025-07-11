@@ -4,9 +4,15 @@
   <meta charset="UTF-8">
   <title>Todo List</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="./css/components/navbar.css" />
+
 </head>
 <body>
-  <h1>Todo List</h1>
+  <header>
+    <h1>Todo List</h1>
+    <div id="navbar"></div> <!-- 여기에 위의 navbar.html 삽입됨 -->
+  </header>
+  
   <div class="row limiter">
     <div class="row insert">
       <input type="checkbox" id="js-toggle-all" class="toggle">
@@ -31,6 +37,11 @@
       <ul class="list" id="js-list"></ul>
     </div>
   </div>
+  <script type="module">
+    import { loadNavbar } from './js/common/navbar.js';
+    loadNavbar();
+  </script>
+  
   <script type="module" src="js/helpers.js"></script>
   <script type="module" src="js/stores.js"></script>
   <script type="module" src="js/app.js"></script>

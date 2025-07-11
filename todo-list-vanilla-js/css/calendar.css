@@ -1,0 +1,69 @@
+body {
+    font-family: 'Arial';
+    text-align: center;
+    background-color: #26232b;  /* 어두운 배경 */
+    color: #ffffff;  /* 기본 글자색 흰색 */
+}
+
+.hidden {
+    display: none;
+}
+
+h2 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+#calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    padding: 10px;
+    margin-top: 20px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.day {
+    border: 1px solid #444;
+    background-color: #3b3743;  /* 카드 배경 */
+    padding: 10px;
+    cursor: pointer;
+    height: 80px;
+    position: relative;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.day:hover {
+    background-color: #4c4755;
+}
+
+.holiday {
+    background-color: rgba(255, 74, 74, 0.2);  /* 연한 빨강 배경 */
+    color: #ff4a4a;
+}
+
+.request {
+    font-size: 0.8em;
+    margin-top: 4px;
+    color: #6df39c;  /* 연한 녹색 */
+}
+
+.popup-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 999;
+}
+
+.popup-content {
+    background: #3b3743;
+    color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    min-width: 300px;
+    text-align: center;
+}

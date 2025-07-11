@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>근무 신청 달력</title>
+  <link rel="stylesheet" href="./css/calendar.css" />
+</head>
+<body>
+  <header>
+    <h1>📅 근무 신청 달력</h1>
+    <div id="navbar"></div> <!-- ✅ 네비바 자리 -->
+  </header>
+
+  <div id="calendar"></div>
+
+  <script type="module">
+    import { loadNavbar } from './js/common/navbar.js';
+    import './js/calendar.js';
+
+    loadNavbar(); // ✅ 네비바 삽입
+  </script>
+</body>
+</html>
