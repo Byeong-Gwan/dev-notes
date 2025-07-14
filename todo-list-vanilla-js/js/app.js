@@ -129,7 +129,7 @@ class App{
 
     this.stores.findAll(function( items ) {
       // 반복을 통해서 completed 값을 checked 로 일괄 변경
-      $.each( items, function( item ) {
+      each( items, function( item ) {
         item.completed = checked;
         self.stores.save( item, $.noop); // 저장
       });
@@ -260,7 +260,7 @@ class App{
         return !item.completed;
       });
     const len = items.length;
-    const text = [len,' item', pluralization( len ),' left'].join('');
+    const text = [len, pluralization( len )].join('');
     this.$total.innerHTML = text;
   };
 
@@ -286,7 +286,6 @@ class App{
     const toggle = document.createElement('input');
     const span = document.createElement('span');
     const destroy = document.createElement('button');
-    const edit = document.createElement('input');
 
     li.setAttribute('data-id', item.id );
 
@@ -305,16 +304,11 @@ class App{
     destroy.className = 'destroy';
     // destroy.appendChild( document.createTextNode('X') );
 
-    edit.setAttribute('type', 'text');
-    edit.className = 'edit';
-
-
     div.appendChild(toggle);
     div.appendChild(span);
     div.appendChild(destroy);
 
     li.appendChild(div);
-    li.appendChild(edit);
 
     return li;
   }

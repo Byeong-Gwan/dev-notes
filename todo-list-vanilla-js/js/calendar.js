@@ -1,124 +1,142 @@
-const calendar = document.getElementById('calendar');
-let selectedDate = null;
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth();
+let requests = JSON.parse(localStorage.getItem('calendar-requests')) || [];
+let popup, confirmBtn, cancelBtn;
 
-const holidays = [
-  { date: '2025-08-15', name: '광복절' },
-  { date: '2025-10-03', name: '개천절' },
-];
-
-let requests = [];
-
-function generateCalendar(year, month) {
-    const firstDay = new Date(year, month, 1);
-    const lastDate = new Date(year, month + 1, 0).getDate();
-    const startDay = firstDay.getDay();
-  
-    calendar.innerHTML = '';
-  
-    for (let i = 0; i < startDay; i++) {
-      calendar.innerHTML += '<div></div>';
-    }
-  
-    for (let day = 1; day <= lastDate; day++) {
-      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  
-      const div = document.createElement('div');
-      div.className = 'day';
-      div.textContent = day;
-  
-      // 공휴일 표시
-      const holiday = holidays.find(h => h.date === dateStr);
-      if (holiday) {
-        div.classList.add('holiday');
-        const tag = document.createElement('div');
-        tag.className = 'request';
-        tag.textContent = holiday.name;
-        div.appendChild(tag);
-      }
-  
-      // 신청 상태 표시
-      const req = requests.find(r => r.date === dateStr);
-      if (req) {
-        if (req.type === '재택') {
-          div.style.backgroundColor = 'rgba(0, 123, 255, 0.2)';
-        } else if (req.type === '연차') {
-          div.style.backgroundColor = 'rgba(255, 165, 0, 0.2)';
-        }
-  
-        const tag = document.createElement('div');
-        tag.className = 'request';
-        tag.textContent = `${req.type} (${req.status || '대기중'})`;
-        div.appendChild(tag);
-      }
-  
-      div.addEventListener('click', () => {
-        selectedDate = dateStr;
-        openPopup(dateStr);
-      });
-  
-      calendar.appendChild(div);
-    }
-  }
-  
-
-  function openPopup(dateStr) {
-    fetch('./components/calendarPopup.html')
-    .then(res => {
-      if (!res.ok) throw new Error('팝업 HTML 로드 실패');
-      return res.text();
-    })
-    .then(html => {
-      const wrapper = document.createElement('div');
-      wrapper.innerHTML = html.trim();
-      const popup = wrapper.querySelector('.popup-overlay');
-
-      if (!popup) {
-        console.error('popup-overlay 요소를 찾을 수 없습니다.');
-        return;
-      }
-
-      document.body.appendChild(popup);
-
-      const popupDateEl = popup.querySelector('#popup-date');
-      if (!popupDateEl) {
-        console.error('#popup-date 요소를 찾을 수 없습니다.');
-        return;
-      }
-
-      popupDateEl.textContent = `신청일: ${selectedDate}`;
-
-      // ✅ 신청 버튼
-      popup.querySelector('#confirm').onclick = () => {
-        const type = popup.querySelector('input[name="type"]:checked')?.value;
-        const reason = popup.querySelector('#reason').value;
-
-        if (!type) {
-          alert('신청 유형을 선택하세요');
-          return;
-        }
-
-        requests = requests.filter(r => r.date !== selectedDate); // 중복 제거
-        requests.push({
-          date: selectedDate,
-          type,
-          reason,
-          status: '대기중',
-        });
-
-        document.body.removeChild(popup);
-        generateCalendar(2025, 7);
-      };
-
-      // ✅ 취소 버튼
-      popup.querySelector('#cancel').onclick = () => {
-        requests = requests.filter(r => r.date !== selectedDate);
-        document.body.removeChild(popup);
-        generateCalendar(2025, 7);
-      };
-    })
-    .catch(err => console.error('팝업 불러오기 에러:', err));
+async function loadPopup() {
+  const res = await fetch('./components/calendarPopup.html');
+  const html = await res.text();
+  document.getElementById('popup-container').innerHTML = html;
+  popup = document.querySelector('.popup-overlay');
+  confirmBtn = popup.querySelector('#confirm');
+  cancelBtn = popup.querySelector('#cancel');
+  setupPopupEvents();
 }
 
+function renderWeekdays() {
+  const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+  document.querySelector('.weekdays').innerHTML = weekdays.map(d => `<div>${d}</div>`).join('');
+}
 
-// 초기 렌더
-generateCalendar(2025, 7);
+function groupByDate(data) {
+  const grouped = {};
+  data.forEach(r => {
+    if (!grouped[r.date]) grouped[r.date] = {};
+    if (!grouped[r.date][r.type]) grouped[r.date][r.type] = new Set();
+    grouped[r.date][r.type].add(r.user);
+  });
+  return grouped;
+}
+
+function generateCalendar(year, month) {
+  document.getElementById('month-title').textContent = `${year}년 ${month + 1}월`;
+  const calendarEl = document.getElementById('calendar');
+  calendarEl.innerHTML = '';
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
+
+  for (let i = 0; i < firstDay; i++) {
+    calendarEl.innerHTML += `<div class="day prev-month"></div>`;
+  }
+
+  const grouped = groupByDate(requests);
+
+  for (let d = 1; d <= lastDate; d++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const div = document.createElement('div');
+    div.className = 'day';
+    div.innerHTML = `<div class="day-number">${d}</div><div class="day-tags"></div>`;
+
+    const tagContainer = div.querySelector('.day-tags');
+
+    if (grouped[dateStr]) {
+      Object.entries(grouped[dateStr]).forEach(([type, usersSet]) => {
+        const users = Array.from(usersSet).join(', ');
+        const tag = document.createElement('div');
+        tag.className = `tag ${type}`;
+        tag.innerHTML = `${type}: ${users} <span class="delete-btn">❌</span>`;
+        tag.querySelector('.delete-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteTag(dateStr, type);
+        });
+        tagContainer.appendChild(tag);
+      });
+    }
+
+    div.addEventListener('click', () => openPopup('single', dateStr));
+    calendarEl.appendChild(div);
+  }
+}
+
+function openPopup(mode, dateStr) {
+  popup.style.display = 'flex';
+  popup.dataset.mode = mode;
+  popup.dataset.date = dateStr;
+  popup.querySelector('#popup-date').textContent = `${dateStr} 신청`;
+  popup.querySelector('#popup-start-date').value = dateStr;
+  popup.querySelector('#popup-end-date').value = dateStr;
+  popup.querySelector('#user').value = '';
+  popup.querySelector('#reason').value = '';
+  popup.querySelectorAll('input[name="type"]').forEach(i => i.checked = false);
+}
+
+function setupPopupEvents() {
+  confirmBtn.onclick = () => {
+    const type = popup.querySelector('input[name="type"]:checked')?.value;
+    const user = popup.querySelector('#user').value.trim();
+    const reason = popup.querySelector('#reason').value.trim();
+    const start = new Date(popup.querySelector('#popup-start-date').value);
+    const end = new Date(popup.querySelector('#popup-end-date').value);
+
+    if (!type || !user || start > end) {
+      alert('모든 항목을 올바르게 입력하세요.');
+      return;
+    }
+
+    let day = new Date(start);
+    while (day <= end) {
+      const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+      requests.push({ id: Date.now() + Math.random(), date: dateStr, type, user, reason });
+      day.setDate(day.getDate() + 1);
+    }
+
+    localStorage.setItem('calendar-requests', JSON.stringify(requests));
+    popup.style.display = 'none';
+    generateCalendar(currentYear, currentMonth);
+  };
+
+  cancelBtn.onclick = () => {
+    popup.style.display = 'none';
+  };
+}
+
+function deleteTag(dateStr, type) {
+  requests = requests.filter(r => !(r.date === dateStr && r.type === type));
+  localStorage.setItem('calendar-requests', JSON.stringify(requests));
+  generateCalendar(currentYear, currentMonth);
+}
+
+document.getElementById('prev-month').addEventListener('click', () => {
+  currentMonth--;
+  if (currentMonth < 0) {
+    currentMonth = 11;
+    currentYear--;
+  }
+  generateCalendar(currentYear, currentMonth);
+});
+
+document.getElementById('next-month').addEventListener('click', () => {
+  currentMonth++;
+  if (currentMonth > 11) {
+    currentMonth = 0;
+    currentYear++;
+  }
+  generateCalendar(currentYear, currentMonth);
+});
+
+(async function init() {
+  await loadPopup();
+  renderWeekdays();
+  generateCalendar(currentYear, currentMonth);
+})();

@@ -32,11 +32,15 @@ a {
   text-decoration: none;
 }
 
+/* Container */
 .limiter {
   margin: 20px auto;
+  width: 100%;
   max-width: 600px;
-  background: #8cbdc5;
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
+  background: #2a2730;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+  overflow: hidden;
 }
 
 .row:before,
@@ -68,7 +72,7 @@ a {
   padding: 30px;
   border-top: solid 1px #3B3841;
   overflow: hidden;
-  background: #8cbdc5;
+  background: #6C6777;
 }
 
 #js-insert {
@@ -82,7 +86,7 @@ a {
   font-size: 23px;
   font-family: inherit;
   color:black;
-  background: #8cbdc5;
+  background: #6C6777;
 }
 
 #js-toggle-all {
@@ -90,6 +94,7 @@ a {
   top: 20px;
   left: 20px;
 }
+
 
 .bar {
   color: #6C6777;
@@ -112,7 +117,7 @@ a {
 
 .total {
   display: inline-block;
-  float: left;
+  float: right;
   margin-top: 4px;
 }
 
@@ -155,7 +160,7 @@ a {
 }
 
 .list{
-  background-color:#f8bf9b;
+  background-color:#3b3743;
   position:relative;
 }
 .list:nth-child(2n){
@@ -180,7 +185,6 @@ a {
   border-bottom: solid 1px #2C2933;
   list-style: none;
   overflow: hidden;
-  color:black;
 }
 
 .list li:hover .destroy {
