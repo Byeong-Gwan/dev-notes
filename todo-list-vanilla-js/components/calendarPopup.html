@@ -1,13 +1,19 @@
-<div class="popup-overlay">
-    <div class="popup-content">
-      <h3 id="popup-date">근무 신청</h3> <!-- ✅ id 추가 -->
-      <label><input type="radio" name="type" value="재택"> 재택</label>
-      <label><input type="radio" name="type" value="연차"> 연차</label>
-      <br>
-      <textarea id="reason" placeholder="신청 사유를 입력하세요"></textarea>
-      <br>
-      <button id="confirm">신청</button>
+<div class="popup-overlay" style="display:none;">
+  <div class="popup-content">
+    <h3 id="popup-date">근무 신청</h3>
+    <label>시작일: <input type="date" id="popup-start-date"></label>
+    <label>종료일: <input type="date" id="popup-end-date"></label>
+    <div>
+      <label class="radio-option"><input type="radio" name="type" value="연차"> 연차</label>
+      <label class="radio-option"><input type="radio" name="type" value="오전반차"> 오전반차</label>
+      <label class="radio-option"><input type="radio" name="type" value="오후반차"> 오후반차</label>
+      <label class="radio-option"><input type="radio" name="type" value="MOD"> MOD</label>
+    </div>
+    <input type="text" id="user" placeholder="이름">
+    <textarea id="reason" placeholder="사유 입력 (선택)"></textarea>
+    <div>
+      <button id="confirm">신청/수정</button>
       <button id="cancel">취소</button>
     </div>
   </div>
-  
+</div>

@@ -21,7 +21,7 @@ export function each ( array, cb ) {
 };
 
 export function pluralization ( value ) {
-  return Number(value) === 1 ? "" : "s";
+  return Number(value) === 0 ? "" : " 개";
 };
 
 export function on ( target, type, callback, useCapture ) {
