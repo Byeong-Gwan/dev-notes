@@ -9,7 +9,7 @@ let requests = JSON.parse(localStorage.getItem('calendar-requests')) || [];
 let popup, confirmBtn, cancelBtn;
 
 async function loadPopup() {
-  const res = await fetch('./components/calendarPopup.html');
+  const res = await fetch('./../components/calendar/calendarPopup.html');
   const html = await res.text();
   document.getElementById('popup-container').innerHTML = html;
   popup = document.querySelector('.popup-overlay');

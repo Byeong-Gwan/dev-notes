@@ -1,0 +1,171 @@
+/* 기본 스타일 */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #1e1e2f;
+  color: #f0f0f5;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  margin: 30px 0 20px;
+  font-size: 2rem;
+  color: #7de1f9;
+}
+
+.limiter {
+  background: #2a2a40;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  padding: 20px;
+}
+
+/* 입력 영역 */
+.insert {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+#js-toggle-all {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+}
+
+#js-insert {
+  flex: 1;
+  padding: 12px 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #3a3a55;
+  color: #fff;
+}
+
+#js-insert::placeholder {
+  color: #aaa;
+}
+
+/* 필터 및 clear 영역 */
+.bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.filter {
+  display: flex;
+  gap: 8px;
+}
+
+.button {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 20px;
+  background: #444;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.button:hover {
+  background: #555;
+}
+
+.button.selected {
+  background: #7de1f9;
+  color: #1e1e2f;
+}
+
+.button--clear {
+  background: #e74c3c;
+}
+
+.button--clear:hover {
+  background: #c0392b;
+}
+
+/* 리스트 영역 */
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.list li {
+  background: #3a3a55;
+  margin-bottom: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.3s;
+}
+
+.list li:hover {
+  background: #4a4a6b;
+}
+
+.todo {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.todo input.toggle {
+  margin-right: 12px;
+}
+
+.todo span {
+  font-size: 1rem;
+  word-break: break-word;
+}
+
+.completed span {
+  text-decoration: line-through;
+  color: #bbb;
+}
+
+/* edit input */
+.edit {
+  display: none;
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #fff;
+  color: #333;
+}
+
+.editing .edit {
+  display: block;
+}
+
+.editing .todo {
+  display: none;
+}
+
+/* destroy (삭제 버튼) */
+.destroy {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  color: #e74c3c;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.destroy:hover {
+  transform: scale(1.2);
+}
