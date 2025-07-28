@@ -15,6 +15,15 @@ db.serialize(() => {
       completed INTEGER DEFAULT 0
     )
   `);
+  // 테이블 생성 (최초 1회)
+  db.run(`CREATE TABLE IF NOT EXISTS requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT,
+    type TEXT,
+    user TEXT,
+    reason TEXT
+  )`);
 });
+
 
 module.exports = db;

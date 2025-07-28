@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Todo List</title>
   <link rel="stylesheet" href="./../css/style.css">
   <link rel="stylesheet" href="./../components/navbar/navbar.css" />
@@ -16,20 +17,21 @@
 
   <div class="row limiter">
     <div class="row insert">
-      <input type="checkbox" id="js-toggle-all" class="toggle">
       <input type="text" id="js-insert" placeholder="What needs to be done ?">
     </div>
     <div class="row bar" id="js-bar">
       <div class="left-group">
-        <span class="total" id="js-total">0 개</span>
+        <input type="checkbox" id="js-toggle-all" class="toggle">
         <ul class="filter" id="js-filters">
-          <li><a href="#/all" class="button selected">All</a></li>
-          <li><a href="#/active" class="button">Active</a></li>
-          <li><a href="#/completed" class="button">Completed</a></li>
+          
+          <a href="#/all" class="button selected">All</a>
+          <a href="#/active" class="button">Active</a>
+          <a href="#/completed" class="button">Completed</a>
         </ul>
       </div>
       <div class="right-group">
         <button class="button button--clear" id="js-clear-completed">Clear Completed</button>
+        <span class="total" id="js-total"></span>
       </div>
     </div>
     

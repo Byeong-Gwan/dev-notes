@@ -3,10 +3,21 @@
  * 연차, 오전 반차, 오후 반차, MOD(재택)
  */
 
+const API_BASE = 'http://localhost:8088/api/requests';
+
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
-let requests = JSON.parse(localStorage.getItem('calendar-requests')) || [];
+let requests = [];
 let popup, confirmBtn, cancelBtn;
+
+async function loadRequests() {
+  try {
+    const res = await fetch(API_BASE);
+    requests = await res.json();
+  } catch (err) {
+    console.error('데이터 불러오기 실패:', err);
+  }
+}
 
 async function loadPopup() {
   const res = await fetch('./../components/calendar/calendarPopup.html');
@@ -28,12 +39,14 @@ function groupByDate(data) {
   data.forEach(r => {
     if (!grouped[r.date]) grouped[r.date] = {};
     if (!grouped[r.date][r.type]) grouped[r.date][r.type] = new Set();
-    grouped[r.date][r.type].add(r.user);
+    grouped[r.date][r.type].add(`${r.user}(${r.id})`); // id 포함시켜 삭제용으로 활용
   });
   return grouped;
 }
 
-function generateCalendar(year, month) {
+async function generateCalendar(year, month) {
+  await loadRequests();
+
   document.getElementById('month-title').textContent = `${year}년 ${month + 1}월`;
   const calendarEl = document.getElementById('calendar');
   calendarEl.innerHTML = '';
@@ -57,15 +70,18 @@ function generateCalendar(year, month) {
 
     if (grouped[dateStr]) {
       Object.entries(grouped[dateStr]).forEach(([type, usersSet]) => {
-        const users = Array.from(usersSet).join(', ');
-        const tag = document.createElement('div');
-        tag.className = `tag ${type}`;
-        tag.innerHTML = `${type}: ${users} <span class="delete-btn">❌</span>`;
-        tag.querySelector('.delete-btn').addEventListener('click', (e) => {
-          e.stopPropagation();
-          deleteTag(dateStr, type);
+        usersSet.forEach(userWithId => {
+          const [user, id] = userWithId.split('(');
+          const cleanId = id.replace(')', '');
+          const tag = document.createElement('div');
+          tag.className = `tag ${type}`;
+          tag.innerHTML = `${type}: ${user} <span class="delete-btn">❌</span>`;
+          tag.querySelector('.delete-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteTag(cleanId);
+          });
+          tagContainer.appendChild(tag);
         });
-        tagContainer.appendChild(tag);
       });
     }
 
@@ -87,7 +103,7 @@ function openPopup(mode, dateStr) {
 }
 
 function setupPopupEvents() {
-  confirmBtn.onclick = () => {
+  confirmBtn.onclick = async () => {
     const type = popup.querySelector('input[name="type"]:checked')?.value;
     const user = popup.querySelector('#user').value.trim();
     const reason = popup.querySelector('#reason').value.trim();
@@ -102,11 +118,25 @@ function setupPopupEvents() {
     let day = new Date(start);
     while (day <= end) {
       const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
-      requests.push({ id: Date.now() + Math.random(), date: dateStr, type, user, reason });
+
+      try {
+        await fetch(API_BASE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            date: dateStr,
+            type,
+            user,
+            reason
+          })
+        });
+      } catch (err) {
+        console.error('신청 실패:', err);
+      }
+
       day.setDate(day.getDate() + 1);
     }
 
-    localStorage.setItem('calendar-requests', JSON.stringify(requests));
     popup.style.display = 'none';
     generateCalendar(currentYear, currentMonth);
   };
@@ -116,10 +146,15 @@ function setupPopupEvents() {
   };
 }
 
-function deleteTag(dateStr, type) {
-  requests = requests.filter(r => !(r.date === dateStr && r.type === type));
-  localStorage.setItem('calendar-requests', JSON.stringify(requests));
-  generateCalendar(currentYear, currentMonth);
+async function deleteTag(id) {
+  try {
+    await fetch(`${API_BASE}/${id}`, {
+      method: 'DELETE'
+    });
+    generateCalendar(currentYear, currentMonth);
+  } catch (err) {
+    console.error('삭제 실패:', err);
+  }
 }
 
 document.getElementById('prev-month').addEventListener('click', () => {

@@ -22,6 +22,10 @@ class App {
   }
 
   async init() {
+    // 💥 URL에 해시 없으면 기본값 '#/all'로 설정
+    if (!document.location.hash) {
+      document.location.hash = '#/all';
+    }
     this.items = await this.fetchTodos();
     this.render();
   }

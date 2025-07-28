@@ -20,7 +20,7 @@ export function showOptionPopup(onConfirm) {
 
         const selectedExtras = Array.from(extras).map(e => e.value);
 
-          // ✅ 기타 옵션 추가
+        // ✅ 기타 옵션 추가
         const customExtra = popup.querySelector('#custom-option').value.trim();
         if (customExtra) {
           selectedExtras.push(customExtra);
@@ -41,4 +41,3 @@ export function showOptionPopup(onConfirm) {
       };
     });
 }
-
