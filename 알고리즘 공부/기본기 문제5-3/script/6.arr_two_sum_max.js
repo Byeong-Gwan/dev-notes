@@ -1,0 +1,14 @@
+/**
+ * 
+#### 6️⃣ **주어진 배열로 만들 수 있는 두 수의 합 중 최대값**
+
+    `// 입력: [1, 2, 4, 5] // 출력: 9  → 4 + 5`
+ */
+
+    const arr = [1, 2, 4, 5];
+    console.log(arrSumMax(arr));
+
+    function arrSumMax (arr) {
+        const sorted = arr.slice().sort((a, b) => b - a);
+        return sorted[0] + sorted[1];
+    }
