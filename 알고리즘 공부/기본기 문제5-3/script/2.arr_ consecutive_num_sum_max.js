@@ -16,12 +16,11 @@
             maxSum += arr[i];            
         }
         
-
         let currentSum = maxSum;
 
         // 슬라이딩 윈도우 시작
         for (let i = len; i < arr.length; i++) {
-            // 이전 구간ㅇ의 첫 번째 값은 빼고, 새로 들어온 값을 더함
+            // 이전 구간의 첫 번째 값은 빼고, 새로 들어온 값을 더함
             currentSum = currentSum - arr[i - len] + arr[i];
             maxSum = Math.max(maxSum, currentSum);
         }
