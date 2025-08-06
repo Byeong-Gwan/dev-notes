@@ -9,6 +9,7 @@
     console.log(arrSumMax(arr));
 
     function arrSumMax (arr) {
+        // 배열을 내림차순으로 정렬 후 첫번쨰, 두번째 큰 값을 더하면 완료
         const sorted = arr.slice().sort((a, b) => b - a);
         return sorted[0] + sorted[1];
     }
