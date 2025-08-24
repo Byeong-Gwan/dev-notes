@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>로그인</title>
+  <link rel="stylesheet" href="./../components/navbar/navbar.css" />
+  <link rel="stylesheet" href="./../css/theme.css" />
+  <style>
+    :root { --card-bg:#2a2a40; --input-bg:#3a3a55; --primary:#7de1f9; --text:#e6e6f0; }
+    body { color: var(--text); }
+    main.page { display:flex; align-items:center; justify-content:center; padding: 40px 16px; }
+    .auth-card { width:100%; max-width: 460px; background:var(--card-bg); border-radius:16px; padding:24px 22px; box-shadow: 0 18px 38px rgba(0,0,0,.45); overflow:hidden; }
+    .auth-title { margin:0 0 16px; font-size:20px; font-weight:800; color:#cfd8ff; }
+    .auth-form { display:flex; flex-direction:column; gap:12px; }
+    .auth-form label { font-size:13px; color:#cfd8ff; }
+    .auth-form input { width:100%; max-width:100%; box-sizing:border-box; display:block; padding:12px 14px; border:none; border-radius:10px; background:var(--input-bg); color:#fff; outline:none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04); }
+    .auth-actions { display:flex; gap:10px; margin-top:6px; align-items:center; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:10px; border:none; cursor:pointer; background:var(--primary); color:#1e1e2f; font-weight:800; text-decoration:none; min-width:96px; }
+    .btn.secondary { background:#444; color:#fff; }
+    .hint { margin-top:8px; font-size:12px; color:#aab; }
+    /* remember me toggle */
+    .remember-row { display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:8px; }
+    .switch { position:relative; display:inline-block; width:42px; height:24px; }
+    .switch input { opacity:0; width:0; height:0; }
+    .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#555a7a; transition:.2s; border-radius:12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+    .slider:before { position:absolute; content:""; height:18px; width:18px; left:3px; top:3px; background:white; border-radius:50%; transition:.2s; }
+    .switch input:checked + .slider { background:#7de1f9; }
+    .switch input:checked + .slider:before { transform: translateX(18px); }
+    .remember-label { font-size:13px; color:#cfd8ff; user-select:none; }
+    @media (max-width: 480px) {
+      .auth-card { padding:18px 16px; border-radius:14px; }
+      .btn { flex:1; min-width: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>로그인</h1>
+    <div id="navbar"></div>
+  </header>
+
+  <main class="page">
+    <section class="auth-card">
+      <h2 class="auth-title">로그인</h2>
+      <form id="login-form" class="auth-form">
+        <div>
+          <label for="username">아이디</label>
+          <input type="text" id="username" name="username" required />
+        </div>
+        <div>
+          <label for="password">비밀번호</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+        <div class="auth-actions">
+          <button class="btn" type="submit">로그인</button>
+          <a class="btn secondary" href="signup.html">회원가입</a>
+        </div>
+        <div class="remember-row">
+          <span class="remember-label">자동 로그인</span>
+          <label class="switch" aria-label="자동 로그인 유지">
+            <input type="checkbox" name="remember" id="remember" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="hint">관리자 계정: admin / 1234</div>
+      </form>
+    </section>
+  </main>
+
+  <script type="module" src="./../js/auth.js"></script>
+  <script type="module" src="./../js/ui-init.js"></script>
+</body>
+</html>

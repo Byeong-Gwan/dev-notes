@@ -1,0 +1,65 @@
+/* Global Theme - Static (no light/dark switching) */
+
+/* Design tokens */
+:root {
+  --bg: #1e1e2f;
+  --text: #f0f0f5;
+  --muted: #bfc3d9;
+  --card: #2b2b3d;
+  --surface: #2a2a3c;
+  --surface-2: #343446;
+  --border: rgba(255,255,255,.08);
+  --accent: #7de1f9;
+  --primary: #1db954; /* green for active nav */
+}
+
+/* Background and base text color */
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  display: flex;              /* sticky footer layout */
+  flex-direction: column;
+}
+
+/* Make page content fill available space and avoid bottom gap */
+main { flex: 1 0 auto; margin-bottom: 0; }
+
+/* Header and title alignment */
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;     /* center title horizontally */
+}
+
+/* Title styling */
+h1 {
+  margin: 28px 0 18px;     /* consistent spacing */
+  font-size: 2rem;
+  color: var(--accent);
+  text-align: center;      /* center text */
+  line-height: 1.25;
+}
+
+/* Utility: container spacing for pages that rely on body flex in page CSS */
+main {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 12px 24px;
+  box-sizing: border-box;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  header { padding-top: 44px; } /* make room for fixed account area */
+  h1 { font-size: 1.6rem; margin: 18px 0 12px; }
+  body { overflow-x: hidden; }
+}
+
+@media (max-width: 480px) {
+  header { padding-top: 48px; }
+  h1 { font-size: 1.35rem; margin: 14px 0 10px; }
+  main { padding: 0 12px 18px; }
+}

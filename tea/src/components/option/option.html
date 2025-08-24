@@ -1,33 +1,48 @@
 <!-- 옵션 선택 팝업 내용 -->
 <div class="option-popup-overlay">
-<div class="option-popup">
+  <div class="option-popup">
     <h3>옵션 선택</h3>
-  
-    <div>
-      <strong>온도 선택 (필수):</strong><br />
-      <label><input type="radio" name="temp" value="Hot" /> Hot</label>
-      <label><input type="radio" name="temp" value="Ice" checked/> Ice</label>
+
+    <div class="option-group">
+      <strong>온도 선택 (필수):</strong>
+      <div class="seg-group cols-2">
+        <input class="vh" type="radio" name="temp" id="temp-hot" value="Hot" />
+        <label class="seg" for="temp-hot">Hot</label>
+        <input class="vh" type="radio" name="temp" id="temp-ice" value="Ice" checked />
+        <label class="seg" for="temp-ice">Ice</label>
+      </div>
     </div>
-  
-    <div>
-      <strong>사이즈 선택 (필수):</strong><br />
-      <label><input type="radio" name="size" value="S" /> S</label>
-      <label><input type="radio" name="size" value="M" checked/> M</label>
-      <label><input type="radio" name="size" value="L" /> L</label>
+
+    <div class="option-group">
+      <strong>사이즈 선택 (필수):</strong>
+      <div class="seg-group cols-3">
+        <input class="vh" type="radio" name="size" id="size-s" value="S" />
+        <label class="seg" for="size-s">S</label>
+        <input class="vh" type="radio" name="size" id="size-m" value="M" checked />
+        <label class="seg" for="size-m">M</label>
+        <input class="vh" type="radio" name="size" id="size-l" value="L" />
+        <label class="seg" for="size-l">L</label>
+      </div>
     </div>
-  
-    <div>
-      <strong>추가 옵션:</strong><br />
-      <label><input type="checkbox" name="extra" value="샷 추가" /> 샷 추가</label>
-      <label><input type="checkbox" name="extra" value="두유로 변경" /> 두유로 변경</label>
+
+    <div class="option-group">
+      <strong>추가 옵션:</strong>
+      <div class="chip-group">
+        <input class="vh" type="checkbox" name="extra" id="extra-shot" value="샷 추가" />
+        <label class="chip" for="extra-shot">샷 추가</label>
+        <input class="vh" type="checkbox" name="extra" id="extra-soy" value="두유로 변경" />
+        <label class="chip" for="extra-soy">두유로 변경</label>
+        <input class="vh" type="checkbox" name="extra" id="extra-decaf" value="디카페인" />
+        <label class="chip" for="extra-decaf">디카페인</label>
+      </div>
     </div>
-  
-    <div>
-      <strong>기타 옵션:</strong><br />
+
+    <div class="option-group">
+      <strong>기타 옵션:</strong>
       <input type="text" id="custom-option" placeholder="예: 시럽 추가 등" />
     </div>
-  
-    <div style="margin-top: 10px;">
+
+    <div class="btn-row">
       <button id="option-confirm">확인</button>
       <button id="option-cancel">취소</button>
     </div>

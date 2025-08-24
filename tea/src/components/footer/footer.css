@@ -1,0 +1,46 @@
+/* components/footer/footer.css */
+.app-footer {
+  position: static; /* not fixed; stays at document flow bottom */
+  width: 100%;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  margin-top: auto; /* push footer to bottom when content is short */
+}
+.footer-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  min-height: 56px;
+  padding: 10px 16px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer-center { color: var(--text); font-weight: 600; }
+.footer-center .link { color: var(--accent); text-decoration: none; }
+.footer-center .link:hover { text-decoration: underline; }
+.footer-center .sep { color: var(--muted); margin: 0 6px; }
+.footer-right .overview {
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* clamp to 2 lines */
+  -webkit-box-orient: vertical;
+  line-clamp: 2; /* standard property for compatibility */
+  overflow: hidden;
+  max-width: 48vw;
+}
+
+/* When sidebar is present, footer remains full width; content is centered by max-width */
+
+/* Mobile layout */
+@media (max-width: 480px) {
+  .footer-inner {
+    padding: 8px 12px;
+    font-size: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .footer-right .overview { max-width: 100%; }
+}

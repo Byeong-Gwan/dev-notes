@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>근무 신청 달력</title>
+  <link rel="stylesheet" href="./../components/calendar/calendar.css" />
+</head>
+<body>
+  <header>
+    <h1>📅 근무 신청 달력</h1>
+    <div id="navbar"></div> <!-- ✅ 네비바 자리 -->
+  </header>
+  
+  <div class="month-controls">
+    <button id="prev-month" class="arrow-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24">
+        <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+      </svg>
+    </button>
+    <span id="month-title"></span>
+    <button id="next-month" class="arrow-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24">
+        <path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="weekdays"></div>
+
+  <div id="calendar" class="calendar-grid"></div>
+
+  <div id="popup-container"></div>
+
+  <script type="module">
+    import { loadNavbar } from './../components/navbar/navbar.js';
+    import './../components/calendar/calendar.js';
+
+    loadNavbar(); // ✅ 네비바 삽입
+  </script>
+</body>
+</html>

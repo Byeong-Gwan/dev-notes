@@ -1,22 +1,112 @@
+ /* Sidebar container (left TOC) */
 .navbar-container {
-    display: flex;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 200px; /* narrower sidebar on desktop */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 16px 12px;
+  background: var(--surface-2);
+  border-right: 1px solid var(--border);
+  box-shadow: 0 0 30px rgba(0,0,0,.25);
+  z-index: 50;
+}
+
+/* Modern pill buttons to match dark theme */
+.tab-btn {
+  padding: 10px 12px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background .15s ease, color .15s ease;
+}
+
+.tab-btn:hover { background: var(--surface); }
+
+.tab-btn.active { background-color: var(--primary); color: #ffffff; }
+
+/* Small red numeric badge */
+.tab-btn .badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--surface-2); /* ring to separate from bg */
+}
+
+/* Right-top account area */
+#account-area {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 60;
+}
+#account-area .tab-btn { background: var(--surface); border-color: var(--border); }
+
+/* Add left margin to content when sidebar is present */
+body.with-sidebar {
+  margin-left: 200px; /* match sidebar width */
+  padding-left: 0; /* gutters handled by main */
+}
+
+/* Responsive: stack/top bar on mobile */
+@media (max-width: 768px) {
+  .navbar-container {
+    position: sticky;
+    top: 48px; /* leave space for the account area */
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap; /* allow multiple rows when there are many tabs (e.g., admin) */
+    align-items: center;
     justify-content: center;
-    gap: 8px;
-    margin-bottom: 24px;
+    gap: 6px;
+    row-gap: 6px;
+    box-sizing: border-box;
+    padding: 8px 12px; /* match page gutter */
+    overflow: visible; /* allow wrapping instead of hidden off-screen */
+    border-right: none;
+    border-bottom: 1px solid var(--border);
   }
-  
-  .tab-btn {
-    padding: 8px 16px;
-    background-color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s;
+
+  body.with-sidebar {
+    margin-left: 0;
+    padding: 0; /* gutters handled by main */
   }
-  
-  .tab-btn.active {
-    background-color: #34c759;
-    color: white;
+
+  #account-area {
+    top: 6px;
+    right: 6px;
   }
-  
+
+  /* compact pills; allow wrapping */
+  .tab-btn { box-sizing: border-box; font-size: 13px; padding: 8px 10px; border-radius: 9px; white-space: nowrap; flex: 1 1 calc(33.33% - 8px); max-width: 100%; text-align: center; }
+  #account-area .tab-btn { padding: 6px 9px; font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+  .navbar-container { row-gap: 8px; }
+  /* two columns on very small screens for readability */
+  .tab-btn { flex: 1 1 calc(50% - 8px); }
+}

@@ -5,7 +5,7 @@ const ESC_KEY = 27;
 
 class App {
   constructor() {
-    this.apiBase = 'http://localhost:8088/api/todos';
+    this.apiBase = '/api/todos';
     this.currentId = 0;
     this.items = []; // ✅ local state 저장
 

@@ -1,9 +1,14 @@
 body {
     font-family: Arial, sans-serif;
-    background: #26232b;
-    color: #fff;
-    text-align: center;
-    padding: 20px;
+    background: var(--bg);
+    color: var(--text);
+    padding: 0; /* allow footer to span full width with no side gap */
+}
+
+.calendar-container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 16px 16px 0; /* page padding lives inside container */
 }
 
 .month-controls {
@@ -36,20 +41,21 @@ body {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 4px;
-    max-width: 800px;
-    margin: auto;
+    max-width: 960px; /* match container and footer */
+    margin: 0 auto;
 }
 
 .weekdays div {
-    background: #444;
+    background: var(--surface-2);
     padding: 8px 0;
     font-weight: bold;
     font-size: 0.85em;
     border-radius: 6px;
+    text-align: center; /* center weekday text */
 }
 
 .day {
-    background: #3a3644;
+    background: var(--surface);
     padding: 6px;
     border-radius: 6px;
     min-height: 80px;
@@ -58,6 +64,7 @@ body {
     justify-content: flex-start;
     font-size: 0.75em;
     position: relative;
+    border: 1px solid var(--border);
 }
 
 .day-number {
@@ -100,6 +107,16 @@ body {
     display: inline;
 }
 
+/* Vacation range visuals */
+.tag.vacation-start {
+    position: relative;
+}
+.tag.vacation-cont {
+    background: #4b9cd3;
+    opacity: 0.35;
+    color: #e8f6ff;
+}
+
 .popup-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -110,11 +127,13 @@ body {
 }
 
 .popup-content {
-    background: #3b3743;
+    background: var(--surface);
     padding: 20px;
     border-radius: 10px;
     width: 320px;
     text-align: left;
+    border: 1px solid var(--border);
+    color: var(--text);
 }
 
 input, textarea {
@@ -124,6 +143,9 @@ input, textarea {
     border: none;
     border-radius: 4px;
     box-sizing: border-box;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px var(--border);
 }
 
 .radio-option {
@@ -139,14 +161,14 @@ input, textarea {
     width: 16px;
     height: 16px;
     margin-right: 8px;
-    border: 2px solid #fff;
+    border: 2px solid var(--text);
     border-radius: 50%;
 }
 
 .radio-option input[type="radio"]:checked {
-    background-color: #4b9cd3;
+    background-color: var(--accent);
 }
 
 .radio-option:hover input[type="radio"] {
-    border-color: #4b9cd3;
+    border-color: var(--accent);
 }

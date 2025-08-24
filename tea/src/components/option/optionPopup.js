@@ -39,5 +39,23 @@ export function showOptionPopup(onConfirm) {
       popup.querySelector('#option-cancel').onclick = () => {
         document.body.removeChild(popup);
       };
+
+      // 오버레이 클릭 시 닫기 (내용 영역 외부)
+      popup.addEventListener('click', (e) => {
+        if (e.target === popup) {
+          document.body.removeChild(popup);
+        }
+      });
+
+      // ESC 키로 닫기
+      const onKey = (e) => {
+        if (e.key === 'Escape') {
+          if (document.body.contains(popup)) {
+            document.body.removeChild(popup);
+          }
+          window.removeEventListener('keydown', onKey);
+        }
+      };
+      window.addEventListener('keydown', onKey);
     });
 }

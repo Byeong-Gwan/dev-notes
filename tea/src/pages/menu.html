@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>티타임 - 메뉴 관리</title>
   <link rel="stylesheet" href="./../css/menu.css" />
+  <link rel="stylesheet" href="./../components/navbar/navbar.css" />
   <link rel="stylesheet" href="./../components/option/popup.css" /> <!-- ✅ 팝업 스타일 호출 -->
+  <link rel="stylesheet" href="./../css/theme.css" />
+  <script src="./../js/auth-guard.js"></script>
+  <script type="module" src="./../js/ui-init.js"></script>
 </head>
 <body>
     <header>
@@ -19,16 +23,73 @@
       <button id="menu-add-btn">추가</button>
     </section>
 
+    <!-- Admin/Test toolbar -->
+    <div class="navbar" style="margin-top:0;">
+      <button id="archive-now-btn" class="tab-btn" style="display:none;" title="지금 즉시 주문 아카이브 후 메뉴 비우기">주문 마감/초기화(테스트)</button>
+    </div>
+
     <ul id="menu-list"></ul>
   </main>
 
   <!-- 모듈 스크립트는 body 하단에 삽입 -->
   <script type="module">
-    import { loadNavbar } from './../components/navbar/navbar.js';
     import MenuApp from './../js/teatime/menuApp.js';
 
-    loadNavbar();
     new MenuApp('teatime-menu');
+
+    // 권한 버튼 표시 및 바인딩 (중복 방지를 위해 아카이브/초기화 버튼만 제공)
+    (async () => {
+      try {
+        const meRes = await fetch('/api/auth/me', { credentials: 'include' });
+        if (!meRes.ok) return; // 비로그인
+        const me = await meRes.json();
+        const adminOnlyBtn = document.getElementById('archive-now-btn');
+
+        // Manager 또는 Admin: 즉시 아카이브/초기화 버튼 표시
+        if ((me?.role === 'manager' || me?.role === 'admin') && adminOnlyBtn) {
+          adminOnlyBtn.style.display = '';
+          adminOnlyBtn.addEventListener('click', async () => {
+            adminOnlyBtn.disabled = true;
+            adminOnlyBtn.textContent = '처리 중...';
+            try {
+              // 같은 날짜 주문내역 존재 여부 확인 후 경고
+              const todayKey = (() => {
+                const d = new Date();
+                const y = d.getFullYear();
+                const m = String(d.getMonth()+1).padStart(2,'0');
+                const da = String(d.getDate()).padStart(2,'0');
+                return `${y}-${m}-${da}`;
+              })();
+              let proceed = true;
+              try {
+                const r = await fetch('/api/orders');
+                const list = await r.json();
+                const existsToday = Array.isArray(list) && list.some(o => {
+                  const d = new Date(o.createdAt);
+                  const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                  return key === todayKey;
+                });
+                if (existsToday) {
+                  proceed = confirm('이미 오늘 주문 내역이 있습니다. 추가하시겠습니까?');
+                }
+              } catch {}
+              if (!proceed) return;
+
+              const res = await fetch('/api/admin/archive-now', { method: 'POST' });
+              const data = await res.json();
+              alert(`주문 ${data.archived || 0}건을 아카이브하고 메뉴를 비웠습니다.`);
+              location.reload();
+            } catch (e) {
+              alert('처리 실패');
+            } finally {
+              adminOnlyBtn.disabled = false;
+              adminOnlyBtn.textContent = '주문 마감/초기화(테스트)';
+            }
+          });
+        }
+
+      } catch {}
+    })();
   </script>
 </body>
 </html>

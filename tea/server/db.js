@@ -23,6 +23,15 @@ db.serialize(() => {
     user TEXT,
     reason TEXT
   )`);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS menus (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      options TEXT,
+      count INTEGER DEFAULT 1
+    )
+  `);
 });
 
 

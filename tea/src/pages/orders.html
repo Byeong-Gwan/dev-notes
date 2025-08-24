@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>주문 내역</title>
+  <link rel="stylesheet" href="./../css/menu.css" />
+  <link rel="stylesheet" href="./../components/navbar/navbar.css" />
+  <link rel="stylesheet" href="./../css/theme.css" />
+  <script src="./../js/auth-guard.js"></script>
+  <style>
+    /* 4주치 2x2 그리드 */
+    .weeks-grid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    @media (max-width: 560px) { .weeks-grid { grid-template-columns: 1fr; } }
+    .week-card { background:#1e1e1e; color:#f5f5f5; border-radius:10px; padding:12px; box-shadow:0 6px 16px rgba(0,0,0,.35); min-height:120px; }
+    .week-card__header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .week-card__title { font-weight:700; font-size:14px; color:#a0e7ff; }
+    .week-card__badge { background:#58cc7e; color:#fff; padding:2px 8px; border-radius:999px; font-weight:700; font-size:12px; }
+    .week-card__list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+    .week-card__item { position:relative; display:flex; justify-content:space-between; align-items:center; font-size:13px; color:#eaeaea; padding-right:26px; }
+    .order-del { position:absolute; right:0; top:50%; transform: translateY(-50%); width:20px; height:20px; border:none; border-radius:50%; background:#3a3a3a; color:#fff; font-weight:700; line-height:20px; text-align:center; cursor:pointer; opacity:0; transition: opacity .15s ease; }
+    .week-card__item:hover .order-del { opacity: 1; }
+    .muted { color:#bdbdbd; font-size:12px; }
+    .day-del { border:none; background:#3a3a3a; color:#fff; width:22px; height:22px; border-radius:50%; cursor:pointer; font-weight:700; line-height:22px; }
+    .day-del:hover { background:#e04f4f; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>주문 내역</h1>
+    <div id="navbar"></div>
+  </header>
+  <main>
+    <div id="weeks" class="weeks-grid"></div>
+  </main>
+  <script type="module">
+    import { loadNavbar } from './../components/navbar/navbar.js';
+    loadNavbar();
+    function fmt(dateStr){
+      try {
+        const d = new Date(dateStr);
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const da = String(d.getDate()).padStart(2,'0');
+        const hh = String(d.getHours()).padStart(2,'0');
+        const mm = String(d.getMinutes()).padStart(2,'0');
+        return `${y}-${m}-${da} ${hh}:${mm}`;
+      } catch { return dateStr; }
+    }
+    function dateKey(dateStr){
+      // 아카이브는 목요일 12시에 실행되므로 같은 날짜/시간으로 묶임 → 날짜(YYYY-MM-DD) 단위로 그룹화
+      try {
+        const d = new Date(dateStr);
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const da = String(d.getDate()).padStart(2,'0');
+        return `${y}-${m}-${da}`;
+      } catch { return String(dateStr).slice(0,10); }
+    }
+    function weekCardNode(group, me){
+      const { key, createdAt, items } = group;
+      const div = document.createElement('div');
+      div.className = 'week-card';
+      // 상단 1줄: 기준일자(아카이브 날짜) + 총 항목 수
+      div.innerHTML = `
+        <div class="week-card__header">
+          <span class="week-card__title">주간 아카이브 · ${key}</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span class="week-card__badge">${items.length}건</span>
+            ${me && (me.role === 'admin' || me.role === 'manager') ? '<button class="day-del" title="이 날짜 주문 모두 삭제">×</button>' : ''}
+          </div>
+        </div>
+        <ul class="week-card__list"></ul>
+      `;
+      const ul = div.querySelector('.week-card__list');
+      const dayDel = div.querySelector('.day-del');
+      if (dayDel) {
+        dayDel.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          if (!confirm(`${key} 의 주문을 모두 삭제할까요?`)) return;
+          try {
+            const res = await fetch(`/api/orders/by-date/${key}`, { method: 'DELETE', credentials: 'include' });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.error || '삭제 실패');
+            load();
+          } catch (e) {
+            alert('해당 날짜 주문 삭제에 실패했습니다.');
+          }
+        });
+      }
+      // 최대 6개만 노출, 초과 시 더보기 문구
+      const maxShow = 6;
+      items.slice(0, maxShow).forEach(o => {
+        const li = document.createElement('li');
+        li.className = 'week-card__item';
+        li.innerHTML = `<span>${o.name}</span><span class="muted">x${o.count}</span>`;
+        const del = document.createElement('button');
+        del.className = 'order-del';
+        del.textContent = '×';
+        del.title = '삭제';
+        del.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          if (!confirm('이 항목을 삭제할까요?')) return;
+          try {
+            const res = await fetch(`/api/orders/${o.id}`, { method: 'DELETE' });
+            const ok = await res.json();
+            if (!ok.success) throw new Error('삭제 실패');
+            load();
+          } catch (e) {
+            alert('삭제 중 오류가 발생했습니다.');
+          }
+        });
+        // 더블클릭 수정: 관리자/매니저만 가능, 수량 증감만 지원
+        li.addEventListener('dblclick', async () => {
+          try {
+            const meRes = await fetch('/api/auth/me', { credentials: 'include' });
+            if (!meRes.ok) return alert('로그인이 필요합니다.');
+            const me = await meRes.json();
+            if (!(me?.role === 'admin' || me?.role === 'manager')) {
+              alert('관리자 또는 매니저만 수정할 수 있습니다.');
+              return;
+            }
+          } catch {
+            alert('권한 확인 실패');
+            return;
+          }
+
+          if (!confirm('수정하시겠습니까?')) return;
+          const s = prompt('추가/감소할 수량을 입력해주세요 (예: 1 또는 -1)');
+          if (!s) return;
+          const delta = parseInt(s, 10);
+          if (Number.isNaN(delta) || !Number.isFinite(delta) || Math.abs(delta) > 9999) {
+            alert('유효한 정수를 입력해주세요.');
+            return;
+          }
+          try {
+            const res = await fetch(`/api/orders/${o.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ countDelta: delta })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.error || '수량 수정 실패');
+            load();
+          } catch (e) {
+            alert('수량 수정에 실패했습니다.');
+          }
+        });
+        li.appendChild(del);
+        ul.appendChild(li);
+      });
+      if (items.length > maxShow) {
+        const rest = document.createElement('li');
+        rest.className = 'muted';
+        rest.textContent = `외 ${items.length - maxShow}건`;
+        ul.appendChild(rest);
+      }
+      return div;
+    }
+    async function load() {
+      const meRes = await fetch('/api/auth/me', { credentials: 'include' }).catch(() => null);
+      const me = meRes && meRes.ok ? await meRes.json() : null;
+      const res = await fetch('/api/orders');
+      const items = await res.json();
+      const $weeks = document.getElementById('weeks');
+      $weeks.innerHTML = '';
+      if (!items.length) {
+        const empty = document.createElement('div');
+        empty.className = 'week-card';
+        empty.textContent = '주문 내역이 없습니다.';
+        $weeks.appendChild(empty);
+        return;
+      }
+      // 1) createdAt 기준 내림차순 정렬
+      items.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      // 2) 날짜 단위로 그룹핑 (주간 아카이브 단위)
+      const map = new Map();
+      for (const it of items) {
+        const k = dateKey(it.createdAt);
+        if (!map.has(k)) map.set(k, []);
+        map.get(k).push(it);
+      }
+      // 3) 최신 그룹 4개만 표시 (최신이 왼쪽 위)
+      const groups = Array.from(map.entries())
+        .map(([key, arr]) => ({ key, createdAt: arr[0]?.createdAt, items: arr }))
+        .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 4);
+      groups.forEach(g => $weeks.appendChild(weekCardNode(g, me)));
+    }
+    load();
+  </script>
+  <script type="module" src="./../js/ui-init.js"></script>
+</body>
+</html>
