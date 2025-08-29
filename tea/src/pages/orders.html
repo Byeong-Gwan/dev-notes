@@ -36,6 +36,7 @@
   <script type="module">
     import { loadNavbar } from './../components/navbar/navbar.js';
     loadNavbar();
+    const REQUESTS_API = 'http://localhost:8088/api/requests';
     function fmt(dateStr){
       try {
         const d = new Date(dateStr);
@@ -57,8 +58,9 @@
         return `${y}-${m}-${da}`;
       } catch { return String(dateStr).slice(0,10); }
     }
-    function weekCardNode(group, me){
+    function weekCardNode(group, me, excludedCount){
       const { key, createdAt, items } = group;
+      const totalCount = (items || []).reduce((acc, o) => acc + (parseInt(o.count, 10) || 0), 0);
       const div = document.createElement('div');
       div.className = 'week-card';
       // 상단 1줄: 기준일자(아카이브 날짜) + 총 항목 수
@@ -66,7 +68,9 @@
         <div class="week-card__header">
           <span class="week-card__title">주간 아카이브 · ${key}</span>
           <div style="display:flex; align-items:center; gap:6px;">
-            <span class="week-card__badge">${items.length}건</span>
+            <span class="week-card__badge" title="항목 수">${items.length}건</span>
+            <span class="week-card__badge" title="총 잔 수">총 ${totalCount}잔</span>
+            ${excludedCount > 0 ? `<span class=\"week-card__badge\" title=\"MOD/연차 등 열외 인원\">열외 ${excludedCount}명</span>` : ''}
             ${me && (me.role === 'admin' || me.role === 'manager') ? '<button class="day-del" title="이 날짜 주문 모두 삭제">×</button>' : ''}
           </div>
         </div>
@@ -158,11 +162,32 @@
       }
       return div;
     }
+    function buildExcludedMap(reqs) {
+      // count unique users per date for types considered as exclusion
+      const EXCLUDE_TYPES = new Set(['연차', 'MOD']);
+      const map = new Map(); // date -> Set(users)
+      for (const r of (reqs || [])) {
+        if (!EXCLUDE_TYPES.has(r.type)) continue;
+        const date = r.date; const user = (r.user || '').trim();
+        if (!date || !user) continue;
+        if (!map.has(date)) map.set(date, new Set());
+        map.get(date).add(user);
+      }
+      return map;
+    }
+
     async function load() {
       const meRes = await fetch('/api/auth/me', { credentials: 'include' }).catch(() => null);
       const me = meRes && meRes.ok ? await meRes.json() : null;
       const res = await fetch('/api/orders');
       const items = await res.json();
+      // Load MOD/연차 신청 데이터
+      let excludedMap = new Map();
+      try {
+        const r = await fetch(REQUESTS_API);
+        const reqs = await r.json();
+        excludedMap = buildExcludedMap(reqs);
+      } catch {}
       const $weeks = document.getElementById('weeks');
       $weeks.innerHTML = '';
       if (!items.length) {
@@ -186,7 +211,10 @@
         .map(([key, arr]) => ({ key, createdAt: arr[0]?.createdAt, items: arr }))
         .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, 4);
-      groups.forEach(g => $weeks.appendChild(weekCardNode(g, me)));
+      groups.forEach(g => {
+        const excludedCount = (excludedMap.get(g.key) || new Set()).size;
+        $weeks.appendChild(weekCardNode(g, me, excludedCount));
+      });
     }
     load();
   </script>

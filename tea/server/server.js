@@ -18,6 +18,17 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'src', 'pages', 'index.html'));
 });
 
+// Friendly mapping: allow top-level "/something.html" to resolve to "src/pages/something.html"
+// e.g., GET /login.html -> src/pages/login.html
+app.get('/:page.html', (req, res, next) => {
+  const filename = req.params.page + '.html';
+  const filePath = path.join(__dirname, '..', 'src', 'pages', filename);
+  fs.access(filePath, fs.constants.F_OK, (err) => {
+    if (err) return next();
+    res.sendFile(filePath);
+  });
+});
+
 // ✅ SQLite DB 연결
 const db = new sqlite3.Database('./database.db', (err) => {
   if (err) {
@@ -64,22 +75,28 @@ function verifyPassword(pw, hash) {
 }
 
 app.post('/api/auth/signup', (req, res) => {
-  let { username, password, name } = req.body;
+  let { username, password, name, tiworld } = req.body;
   if (typeof username === 'string') username = username.trim();
   if (typeof password === 'string') password = password.trim();
   if (typeof name === 'string') name = name.trim();
+  const isTiworld = tiworld === true || tiworld === 'true' || tiworld === 'on' || tiworld === 1 || tiworld === '1';
   if (!username || !password || !name) return res.status(400).json({ error: 'username, password and name are required' });
+  // Prefix name when tiworld is selected (avoid double prefix)
+  const PREFIX = '티월드 ';
+  const displayName = isTiworld
+    ? (name.startsWith(PREFIX) ? name : PREFIX + name)
+    : name;
   const nowIso = new Date().toISOString();
   const hashed = hashPassword(password);
   db.run(
     'INSERT INTO users (username, password, name, role, approved, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
-    [username, hashed, name, 'user', 0, nowIso],
+    [username, hashed, displayName, 'user', 0, nowIso],
     function (err) {
       if (err) {
         if (/(UNIQUE|unique)/i.test(err.message)) return res.status(409).json({ error: 'username already exists' });
         return res.status(500).json({ error: err.message });
       }
-      res.json({ id: this.lastID, username, name, approved: false, message: 'Signup received. Awaiting admin approval.' });
+      res.json({ id: this.lastID, username, name: displayName, approved: false, message: 'Signup received. Awaiting admin approval.' });
     }
   );
 });
