@@ -13,5 +13,6 @@
     console.log(arraysOneArr(arr));
 
     function arraysOneArr (arr) {
+        // 몇개의 배열이 중첩될지 몰라 Infinity 안전하게 처리
         return arr.flat(Infinity);
     }
