@@ -12,6 +12,88 @@ async function getMe() {
   }
 }
 
+// ===== Leave approvals =====
+async function fetchLeavePending() {
+  const r = await fetch('/api/leave/pending', { credentials: 'include' });
+  if (!r.ok) {
+    const msg = `Failed to load pending leave: ${r.status} ${r.statusText}`;
+    console.error(msg);
+    throw new Error(msg);
+  }
+  return await r.json();
+}
+
+function renderLeavePending(list) {
+  const table = document.getElementById('leave-table');
+  const empty = document.getElementById('leave-empty');
+  const tbody = table.querySelector('tbody');
+  tbody.innerHTML = '';
+
+  if (!list || list.length === 0) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  table.style.display = 'table';
+
+  for (const it of list) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-th="ID">${it.displayUsername || '-'}</td>
+      <td data-th="날짜">${it.date}</td>
+      <td data-th="종류">${it.type}</td>
+      <td data-th="사용자">${it.displayName || it.user || '-'}</td>
+      <td data-th="사유">${it.reason || ''}</td>
+      <td data-th="처리">
+        <button type="button" class="approve-leave btn btn-approve" data-id="${it.id}">승인</button>
+        <button type="button" class="reject-leave btn btn-reject" data-id="${it.id}">거절</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  tbody.querySelectorAll('.approve-leave').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id');
+      btn.disabled = true;
+      try {
+        const r = await fetch(`/api/leave/${id}/approve`, { method: 'POST', credentials: 'include' });
+        if (!r.ok) throw new Error();
+        await loadLeave();
+        if (window.__refreshPendingBadge) window.__refreshPendingBadge();
+      } catch {
+        alert('승인 실패');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+
+  tbody.querySelectorAll('.reject-leave').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-id');
+      if (!confirm('이 신청을 거절하시겠습니까?')) return;
+      btn.disabled = true;
+      try {
+        const r = await fetch(`/api/leave/${id}/reject`, { method: 'POST', credentials: 'include' });
+        if (!r.ok) throw new Error();
+        await loadLeave();
+        if (window.__refreshPendingBadge) window.__refreshPendingBadge();
+      } catch {
+        alert('거절 실패');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+async function loadLeave() {
+  const list = await fetchLeavePending();
+  renderLeavePending(list);
+}
+
 async function ensureAdmin() {
   const me = await getMe();
   if (!me) {
@@ -61,13 +143,13 @@ function renderPending(list) {
   for (const u of list) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${u.id}</td>
-      <td>${u.username}</td>
-      <td>${u.name || '-'}</td>
-      <td>${u.createdAt ? new Date(u.createdAt).toLocaleString() : '-'}</td>
-      <td>
-        <button type="button" class="approve-btn" data-id="${u.id}">승인</button>
-        <button type="button" class="reject-btn" data-id="${u.id}" style="margin-left:8px;background:#e55353;color:#fff;border:none;border-radius:10px;padding:8px 12px;cursor:pointer;">거절</button>
+      <td data-th="ID">${u.id}</td>
+      <td data-th="사용자명">${u.username}</td>
+      <td data-th="이름">${u.name || '-'}</td>
+      <td data-th="가입일">${u.createdAt ? new Date(u.createdAt).toLocaleString() : '-'}</td>
+      <td data-th="처리">
+        <button type="button" class="approve-btn btn btn-approve" data-id="${u.id}">승인</button>
+        <button type="button" class="reject-btn btn btn-reject" data-id="${u.id}">거절</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -130,6 +212,10 @@ async function setRole(userId, role) {
 function renderApproved(list) {
   const table = document.getElementById('approved-table');
   const empty = document.getElementById('approved-empty');
+  if (!table || !empty) {
+    console.warn('approved-table/approved-empty 요소가 없어 renderApproved를 건너뜁니다.');
+    return;
+  }
   const tbody = table.querySelector('tbody');
   tbody.innerHTML = '';
 
@@ -190,9 +276,11 @@ async function load() {
     renderPending(pending);
     const approved = await fetchApproved();
     renderApproved(approved);
+    await loadLeave();
   } catch (e) {
-    console.error(e);
-    alert('승인 목록을 불러오지 못했습니다.');
+    console.error('관리자 승인 페이지 로드 오류:', e);
+    // 섹션이 완전히 비지 않도록 빈 상태 표시
+    try { renderLeavePending([]); } catch {}
   }
 }
 

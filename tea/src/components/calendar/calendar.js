@@ -3,7 +3,8 @@
  * 연차, 오전 반차, 오후 반차, MOD(재택)
  */
 
-const API_BASE = 'http://localhost:8088/api/requests';
+const API_BASE = '/api/requests';
+let IS_ADMIN = false;
 
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
@@ -13,7 +14,7 @@ let popup, confirmBtn, cancelBtn;
 
 async function loadRequests() {
   try {
-    const res = await fetch(API_BASE);
+    const res = await fetch(`${API_BASE}?status=approved`, { credentials: 'include' });
     requests = await res.json();
   } catch (err) {
     console.error('데이터 불러오기 실패:', err);
@@ -138,11 +139,15 @@ async function generateCalendar(year, month) {
             const cleanId = id.replace(')', '');
             const tag = document.createElement('div');
             tag.className = `tag ${type}`;
-            tag.innerHTML = `${type}: ${user} <span class="delete-btn">❌</span>`;
-            tag.querySelector('.delete-btn').addEventListener('click', (e) => {
-              e.stopPropagation();
-              deleteTag(cleanId);
-            });
+            if (IS_ADMIN) {
+              tag.innerHTML = `${type}: ${user} <span class="delete-btn">❌</span>`;
+              tag.querySelector('.delete-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteTag(cleanId);
+              });
+            } else {
+              tag.textContent = `${type}: ${user}`;
+            }
             tagContainer.appendChild(tag);
           });
         }
@@ -170,23 +175,27 @@ async function generateCalendar(year, month) {
             : `연차: ${user} (${range.start} ~ ${range.end})`;
           const tag = document.createElement('div');
           tag.className = `tag 연차 vacation-start`;
-          tag.innerHTML = `${label} <span class="delete-btn">❌</span>`;
-          // Delete whole range
-          tag.querySelector('.delete-btn').addEventListener('click', async (e) => {
-            e.stopPropagation();
-            await deleteRange(range);
-          });
-          // Double click to edit range
-          tag.addEventListener('dblclick', (e) => {
-            e.stopPropagation();
-            currentEditingRange = range;
-            openPopup('range-edit', range.start);
-            // Prefill
-            popup.querySelector('#popup-start-date').value = range.start;
-            popup.querySelector('#popup-end-date').value = range.end;
-            popup.querySelector('#user').value = user.trim();
-            popup.querySelectorAll('input[name="type"]').forEach(i => i.checked = (i.value === '연차'));
-          });
+          if (IS_ADMIN) {
+            tag.innerHTML = `${label} <span class="delete-btn">❌</span>`;
+            // Delete whole range
+            tag.querySelector('.delete-btn').addEventListener('click', async (e) => {
+              e.stopPropagation();
+              await deleteRange(range);
+            });
+            // Double click to edit range
+            tag.addEventListener('dblclick', (e) => {
+              e.stopPropagation();
+              currentEditingRange = range;
+              openPopup('range-edit', range.start);
+              // Prefill
+              popup.querySelector('#popup-start-date').value = range.start;
+              popup.querySelector('#popup-end-date').value = range.end;
+              popup.querySelector('#user').value = user.trim();
+              popup.querySelectorAll('input[name="type"]').forEach(i => i.checked = (i.value === '연차'));
+            });
+          } else {
+            tag.textContent = label;
+          }
           tagContainer.appendChild(tag);
         } else {
           // Continuation marker
@@ -198,7 +207,9 @@ async function generateCalendar(year, month) {
       });
     }
 
-    div.addEventListener('click', () => openPopup('single', dateStr));
+    if (IS_ADMIN) {
+      div.addEventListener('click', () => openPopup('single', dateStr));
+    }
     calendarEl.appendChild(div);
   }
 }
@@ -297,6 +308,13 @@ document.getElementById('next-month').addEventListener('click', () => {
 });
 
 (async function init() {
+  try {
+    const meRes = await fetch('/api/auth/me', { credentials: 'include' });
+    if (meRes.ok) {
+      const me = await meRes.json();
+      IS_ADMIN = me?.role === 'admin';
+    }
+  } catch {}
   await loadPopup();
   renderWeekdays();
   generateCalendar(currentYear, currentMonth);

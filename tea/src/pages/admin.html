@@ -6,6 +6,7 @@
   <title>관리자 - 승인 요청</title>
   <link rel="stylesheet" href="./../css/theme.css" />
   <link rel="stylesheet" href="./../components/navbar/navbar.css" />
+  <link rel="stylesheet" href="./../css/admin.css" />
   <script type="module" src="./../js/ui-init.js"></script>
   <style>
     .admin-wrap { margin-top: 8px; }
@@ -32,7 +33,8 @@
       <div class="admin-card">
         <h2>대기 중인 사용자</h2>
         <div id="pending-empty" class="empty" style="display:none;">대기 중인 가입 요청이 없습니다.</div>
-        <table id="pending-table" style="display:none;">
+        <div class="table-responsive">
+          <table id="pending-table" class="table" style="display:none;">
           <thead>
             <tr>
               <th>ID</th>
@@ -43,7 +45,28 @@
             </tr>
           </thead>
           <tbody></tbody>
-        </table>
+          </table>
+        </div>
+      </div>
+
+      <div class="admin-card" style="margin-top:16px;">
+        <h2>대기 중인 연차/근무 신청</h2>
+        <div id="leave-empty" class="empty" style="display:none;">대기 중인 신청이 없습니다.</div>
+        <div class="table-responsive">
+          <table id="leave-table" class="table" style="display:none;">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>날짜</th>
+              <th>종류</th>
+              <th>사용자</th>
+              <th>사유</th>
+              <th>처리</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </main>

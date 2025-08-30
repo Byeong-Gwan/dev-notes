@@ -44,22 +44,41 @@ class App {
   }
 
   async fetchTodos() {
-    const res = await fetch(this.apiBase);
-    return res.json();
+    try {
+      const res = await fetch(this.apiBase);
+      if (!res.ok) {
+        console.warn('[todos] fetch failed with status', res.status);
+        return [];
+      }
+      return await res.json();
+    } catch (err) {
+      console.warn('[todos] fetch error, defaulting to empty list', err);
+      return [];
+    }
   }
 
   async saveTodo(item) {
-    const method = item.id ? 'PUT' : 'POST';
-    const url = item.id ? `${this.apiBase}/${item.id}` : this.apiBase;
-    await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(item),
-    });
+    try {
+      const method = item.id ? 'PUT' : 'POST';
+      const url = item.id ? `${this.apiBase}/${item.id}` : this.apiBase;
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item),
+      });
+      if (!res.ok) console.warn('[todos] save failed with status', res.status);
+    } catch (err) {
+      console.warn('[todos] save error (ignored)', err);
+    }
   }
 
   async deleteTodo(id) {
-    await fetch(`${this.apiBase}/${id}`, { method: 'DELETE' });
+    try {
+      const res = await fetch(`${this.apiBase}/${id}`, { method: 'DELETE' });
+      if (!res.ok) console.warn('[todos] delete failed with status', res.status);
+    } catch (err) {
+      console.warn('[todos] delete error (ignored)', err);
+    }
   }
 
   render() {

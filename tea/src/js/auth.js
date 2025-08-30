@@ -38,12 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     signupForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(signupForm);
-      const payload = {
-        username: fd.get('username'),
-        password: fd.get('password'),
-        name: fd.get('name'),
-        tiworld: !!fd.get('tiworld')
-      };
+      const payload = { username: fd.get('username'), password: fd.get('password'), name: fd.get('name') };
       if (!payload.name || !payload.name.trim()) {
         alert('이름을 입력해주세요.');
         return;

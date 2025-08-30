@@ -124,9 +124,7 @@ class MenuApp {
       items.forEach(item => {
         const li = document.createElement('li');
         const pickedNames = Array.isArray(item.pickedBy) ? item.pickedBy : [];
-        // Display: strip team prefix like '티월드 ' from names
-        const displayNames = pickedNames.map(n => (typeof n === 'string' ? n.replace(/^티월드\s+/, '') : n));
-        const pickedLabel = displayNames.length ? `<div class="picked-by">${displayNames.join(', ')}</div>` : '';
+        const pickedLabel = pickedNames.length ? `<div class="picked-by">${pickedNames.join(', ')}</div>` : '';
         li.innerHTML = `
           <div class="menu-main">
             <span class="menu-text">${item.name}</span>

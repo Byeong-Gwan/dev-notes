@@ -18,17 +18,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'src', 'pages', 'index.html'));
 });
 
-// Friendly mapping: allow top-level "/something.html" to resolve to "src/pages/something.html"
-// e.g., GET /login.html -> src/pages/login.html
-app.get('/:page.html', (req, res, next) => {
-  const filename = req.params.page + '.html';
-  const filePath = path.join(__dirname, '..', 'src', 'pages', filename);
-  fs.access(filePath, fs.constants.F_OK, (err) => {
-    if (err) return next();
-    res.sendFile(filePath);
-  });
-});
-
 // ✅ SQLite DB 연결
 const db = new sqlite3.Database('./database.db', (err) => {
   if (err) {
@@ -75,28 +64,22 @@ function verifyPassword(pw, hash) {
 }
 
 app.post('/api/auth/signup', (req, res) => {
-  let { username, password, name, tiworld } = req.body;
+  let { username, password, name } = req.body;
   if (typeof username === 'string') username = username.trim();
   if (typeof password === 'string') password = password.trim();
   if (typeof name === 'string') name = name.trim();
-  const isTiworld = tiworld === true || tiworld === 'true' || tiworld === 'on' || tiworld === 1 || tiworld === '1';
   if (!username || !password || !name) return res.status(400).json({ error: 'username, password and name are required' });
-  // Prefix name when tiworld is selected (avoid double prefix)
-  const PREFIX = '티월드 ';
-  const displayName = isTiworld
-    ? (name.startsWith(PREFIX) ? name : PREFIX + name)
-    : name;
   const nowIso = new Date().toISOString();
   const hashed = hashPassword(password);
   db.run(
     'INSERT INTO users (username, password, name, role, approved, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
-    [username, hashed, displayName, 'user', 0, nowIso],
+    [username, hashed, name, 'user', 0, nowIso],
     function (err) {
       if (err) {
         if (/(UNIQUE|unique)/i.test(err.message)) return res.status(409).json({ error: 'username already exists' });
         return res.status(500).json({ error: err.message });
       }
-      res.json({ id: this.lastID, username, name: displayName, approved: false, message: 'Signup received. Awaiting admin approval.' });
+      res.json({ id: this.lastID, username, name, approved: false, message: 'Signup received. Awaiting admin approval.' });
     }
   );
 });
@@ -279,7 +262,11 @@ db.serialize(() => {
       date TEXT,
       type TEXT,
       user TEXT,
-      reason TEXT
+      reason TEXT,
+      status TEXT DEFAULT 'approved',
+      createdBy INTEGER,
+      approvedBy INTEGER,
+      approvedAt TEXT
     )
   `);
 
@@ -302,7 +289,9 @@ db.serialize(() => {
       name TEXT,
       role TEXT DEFAULT 'user',
       approved INTEGER DEFAULT 0,
-      createdAt TEXT
+      createdAt TEXT,
+      avatarUrl TEXT,
+      memo TEXT
     )
   `);
 
@@ -316,6 +305,36 @@ db.serialize(() => {
         else console.log('✅ migrated: users.name column added');
       });
     }
+    const hasAvatar = Array.isArray(cols) && cols.some(c => c.name === 'avatarUrl');
+    if (!hasAvatar) {
+      db.run('ALTER TABLE users ADD COLUMN avatarUrl TEXT', err => {
+        if (err) console.error('failed to add users.avatarUrl column:', err.message);
+        else console.log('✅ migrated: users.avatarUrl column added');
+      });
+    }
+    const hasMemo = Array.isArray(cols) && cols.some(c => c.name === 'memo');
+    if (!hasMemo) {
+      db.run('ALTER TABLE users ADD COLUMN memo TEXT', err => {
+        if (err) console.error('failed to add users.memo column:', err.message);
+        else console.log('✅ migrated: users.memo column added');
+      });
+    }
+  });
+
+  // 마이그레이션: requests 확장 컬럼 추가(status, createdBy, approvedBy, approvedAt)
+  db.all("PRAGMA table_info(requests)", (e, cols) => {
+    if (e) return console.error('requests schema check failed:', e.message);
+    const need = (name) => !(Array.isArray(cols) && cols.some(c => c.name === name));
+    const doAdd = (sql, label) => db.run(sql, err => {
+      if (err) console.error(`failed to add requests.${label} column:`, err.message);
+      else console.log(`✅ migrated: requests.${label} column added`);
+    });
+    if (need('status')) doAdd("ALTER TABLE requests ADD COLUMN status TEXT DEFAULT 'approved'", 'status');
+    if (need('createdBy')) doAdd('ALTER TABLE requests ADD COLUMN createdBy INTEGER', 'createdBy');
+    if (need('approvedBy')) doAdd('ALTER TABLE requests ADD COLUMN approvedBy INTEGER', 'approvedBy');
+    if (need('approvedAt')) doAdd('ALTER TABLE requests ADD COLUMN approvedAt TEXT', 'approvedAt');
+    // 기존 데이터는 승인된 것으로 간주
+    db.run("UPDATE requests SET status = 'approved' WHERE status IS NULL OR status = ''");
   });
 });
 
@@ -719,7 +738,11 @@ app.put('/api/orders/:id', requireAdminOrManager, (req, res) => {
 // ✅ REQUESTS (근무 신청) API
 //
 app.get('/api/requests', (req, res) => {
-  db.all('SELECT * FROM requests', (err, rows) => {
+  const status = (req.query && req.query.status) ? String(req.query.status) : null;
+  let sql = 'SELECT * FROM requests';
+  const params = [];
+  if (status) { sql += ' WHERE status = ?'; params.push(status); }
+  db.all(sql, params, (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
@@ -728,11 +751,11 @@ app.get('/api/requests', (req, res) => {
 app.post('/api/requests', (req, res) => {
   const { date, type, user, reason } = req.body;
   db.run(
-    'INSERT INTO requests (date, type, user, reason) VALUES (?, ?, ?, ?)',
-    [date, type, user, reason],
+    'INSERT INTO requests (date, type, user, reason, status, createdBy) VALUES (?, ?, ?, ?, ?, ?)',
+    [date, type, user, reason, 'approved', (req.session && req.session.user && req.session.user.id) || null],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID, date, type, user, reason });
+      res.json({ id: this.lastID, date, type, user, reason, status: 'approved' });
     }
   );
 });
@@ -741,6 +764,112 @@ app.delete('/api/requests/:id', (req, res) => {
   db.run('DELETE FROM requests WHERE id = ?', [req.params.id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ success: this.changes > 0 });
+  });
+});
+
+// ===== Helpers =====
+function requireAuth(req, res, next) {
+  if (req.session && req.session.user) return next();
+  return res.status(401).json({ error: 'Not authenticated' });
+}
+
+// ===== Profile APIs =====
+app.get('/api/me/profile', requireAuth, (req, res) => {
+  const id = req.session.user.id;
+  db.get('SELECT id, username, name, role, approved, createdAt, avatarUrl, memo FROM users WHERE id = ?', [id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'User not found' });
+    res.json(row);
+  });
+});
+
+app.put('/api/me/profile', requireAuth, (req, res) => {
+  const id = req.session.user.id;
+  let { name, avatarUrl, memo } = req.body || {};
+  name = typeof name === 'string' ? name.trim() : undefined;
+  avatarUrl = typeof avatarUrl === 'string' ? avatarUrl.trim() : undefined;
+  memo = typeof memo === 'string' ? memo : undefined;
+  db.get('SELECT name, avatarUrl, memo FROM users WHERE id = ?', [id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'User not found' });
+    const newName = name !== undefined ? name : row.name;
+    const newAvatar = avatarUrl !== undefined ? avatarUrl : row.avatarUrl;
+    const newMemo = memo !== undefined ? memo : row.memo;
+    db.run('UPDATE users SET name = ?, avatarUrl = ?, memo = ? WHERE id = ?', [newName, newAvatar, newMemo, id], function (e2) {
+      if (e2) return res.status(500).json({ error: e2.message });
+      res.json({ success: this.changes > 0, name: newName, avatarUrl: newAvatar, memo: newMemo });
+    });
+  });
+});
+
+// ===== Leave (연차/MOD 등) Workflow =====
+// Apply: create pending requests for a date range
+app.post('/api/leave/apply', requireAuth, (req, res) => {
+  const { start, end, type, reason } = req.body || {};
+  const userName = req.session.user.name || req.session.user.username;
+  if (!start || !end || !type) return res.status(400).json({ error: 'start, end, type required' });
+  const s = new Date(start), e = new Date(end);
+  if (isNaN(s) || isNaN(e) || s > e) return res.status(400).json({ error: 'Invalid date range' });
+  const dates = [];
+  const d = new Date(s);
+  while (d <= e) {
+    dates.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+    d.setDate(d.getDate()+1);
+  }
+  const stmt = db.prepare('INSERT INTO requests(date, type, user, reason, status, createdBy) VALUES (?, ?, ?, ?, ?, ?)');
+  dates.forEach(ds => stmt.run(ds, type, userName, reason || '', 'pending', req.session.user.id));
+  stmt.finalize(err => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: true, created: dates.length });
+  });
+});
+
+// My requests
+app.get('/api/leave/my', requireAuth, (req, res) => {
+  const userName = req.session.user.name || req.session.user.username;
+  db.all('SELECT * FROM requests WHERE user = ? ORDER BY date DESC', [userName], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+// Pending list for admin
+app.get('/api/leave/pending', requireAdmin, (req, res) => {
+  const sql = `
+    SELECT r.*, u.name AS displayName, u.username AS displayUsername
+    FROM requests r
+    LEFT JOIN users u ON u.id = r.createdBy
+    WHERE r.status = 'pending'
+    ORDER BY r.date ASC
+  `;
+  db.all(sql, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+// Approve / Reject
+app.post('/api/leave/:id/approve', requireAdmin, (req, res) => {
+  const adminId = req.session.user.id;
+  const nowIso = new Date().toISOString();
+  db.run("UPDATE requests SET status = 'approved', approvedBy = ?, approvedAt = ? WHERE id = ?", [adminId, nowIso, req.params.id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: this.changes > 0 });
+  });
+});
+
+app.post('/api/leave/:id/reject', requireAdmin, (req, res) => {
+  db.run("UPDATE requests SET status = 'rejected' WHERE id = ?", [req.params.id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ success: this.changes > 0 });
+  });
+});
+
+// Pending count for navbar badge
+app.get('/api/admin/leave/pending-count', requireAdmin, (req, res) => {
+  db.get("SELECT COUNT(*) AS count FROM requests WHERE status = 'pending'", (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ count: row?.count || 0 });
   });
 });
 
