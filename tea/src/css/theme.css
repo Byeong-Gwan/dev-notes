@@ -51,6 +51,23 @@ main {
   box-sizing: border-box;
 }
 
+/* High-contrast code block for dark theme */
+.code-block {
+  background: #11131a;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  line-height: 1.5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.95rem;
+  white-space: pre-wrap;   /* allow wrapping for long lines */
+  word-break: break-word;  /* prevent overflow */
+}
+
+/* Muted utility */
+.muted { color: var(--muted); }
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   header { padding-top: 44px; } /* make room for fixed account area */
@@ -63,3 +80,41 @@ main {
   h1 { font-size: 1.35rem; margin: 14px 0 10px; }
   main { padding: 0 12px 18px; }
 }
+
+/* Toasts */
+#toastContainer {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 2147483647;
+}
+.toast {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.35);
+  transition: transform .2s ease, opacity .2s ease;
+}
+.toast.info { border-color: #4aa3ff55; }
+.toast.success { border-color: #22c55e55; }
+.toast.warn { border-color: #f59e0b55; }
+.toast.error { border-color: #ef444455; }
+.toast.hide { opacity: 0; transform: translateY(-6px); }
+
+/* Spinner */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,.25);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin .8s linear infinite;
+  margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

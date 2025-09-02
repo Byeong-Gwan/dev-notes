@@ -18,12 +18,22 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'src', 'pages', 'index.html'));
 });
 
-// ✅ SQLite DB 연결
-const db = new sqlite3.Database('./database.db', (err) => {
+// Simple version endpoint to verify running code version
+app.get('/api/version', (_req, res) => {
+  res.json({
+    name: 'tea-server',
+    version: 1,
+    builtAt: new Date().toISOString()
+  });
+});
+
+// ✅ SQLite DB 연결 (절대 경로로 고정하여 CWD 영향 제거)
+const dbFilePath = path.join(__dirname, 'database.db');
+const db = new sqlite3.Database(dbFilePath, (err) => {
   if (err) {
     console.error('DB connection error:', err);
   } else {
-    console.log('✅ Connected to SQLite3 DB');
+    console.log('✅ Connected to SQLite3 DB at', dbFilePath);
   }
 });
 
@@ -336,6 +346,32 @@ db.serialize(() => {
     // 기존 데이터는 승인된 것으로 간주
     db.run("UPDATE requests SET status = 'approved' WHERE status IS NULL OR status = ''");
   });
+
+  // === Algorithms: submissions & comments tables ===
+  db.run(`
+    CREATE TABLE IF NOT EXISTS algo_submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      problemId INTEGER,
+      title TEXT,
+      userId INTEGER,
+      userName TEXT,
+      language TEXT,
+      code TEXT,
+      createdAt TEXT
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS algo_comments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      submissionId INTEGER,
+      userId INTEGER,
+      userName TEXT,
+      content TEXT,
+      parentId INTEGER,
+      createdAt TEXT
+    )
+  `);
 });
 
 // Seed default admin if not exists
@@ -745,6 +781,260 @@ app.get('/api/requests', (req, res) => {
   db.all(sql, params, (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
+  });
+});
+
+// =========================
+// ✅ Algorithms (Problems / Submissions / Comments)
+// =========================
+function readProblemPool() {
+  try {
+    const p = path.join(__dirname, 'data', 'problems_pool.json');
+    const txt = fs.readFileSync(p, 'utf-8');
+    const arr = JSON.parse(txt);
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    console.warn('problems_pool.json not found or invalid');
+    return [];
+  }
+}
+
+function getDailyProblems(count = 3) {
+  const pool = readProblemPool();
+  if (pool.length === 0) return [];
+  const today = new Date();
+  const dayKey = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const res = [];
+  for (let i = 0; i < Math.min(count, pool.length); i++) {
+    const idx = (dayKey + i * 73) % pool.length; // simple deterministic stride
+    res.push(pool[idx]);
+  }
+  return res;
+}
+
+function getProblemById(id) {
+  const pool = readProblemPool();
+  return pool.find(p => Number(p.id) === Number(id)) || null;
+}
+
+// Get today's 3 problems
+app.get('/api/algos/daily', (req, res) => {
+  const items = getDailyProblems(3).map(p => ({ id: p.id, title: p.title, difficulty: p.difficulty, prompt: p.prompt }));
+  res.json(items);
+});
+
+// Get full problem detail (including examples)
+app.get('/api/algos/problems/:id', (req, res) => {
+  const p = getProblemById(Number(req.params.id));
+  if (!p) return res.status(404).json({ error: 'Problem not found' });
+  res.json(p);
+});
+
+// List submissions by problem
+app.get('/api/algos/submissions', (req, res) => {
+  const problemId = Number(req.query.problemId);
+  if (!problemId) return res.status(400).json({ error: 'problemId required' });
+  db.all('SELECT * FROM algo_submissions WHERE problemId = ? ORDER BY datetime(createdAt) DESC', [problemId], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+// Create submission
+app.post('/api/algos/submissions', (req, res) => {
+  const { problemId, language, code } = req.body || {};
+  if (!problemId || !language || typeof code !== 'string') return res.status(400).json({ error: 'problemId, language, code required' });
+  if (!code.trim()) return res.status(400).json({ error: 'empty code not allowed' });
+  const prob = getProblemById(problemId);
+  if (!prob) return res.status(404).json({ error: 'Problem not found' });
+  const nowIso = new Date().toISOString();
+  const userId = (req.session && req.session.user && req.session.user.id) || null;
+  const userName = (req.session && req.session.user && (req.session.user.name || req.session.user.username)) || '익명';
+  db.run(
+    'INSERT INTO algo_submissions(problemId, title, userId, userName, language, code, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [Number(problemId), String(prob.title), userId, userName, String(language), String(code), nowIso],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID, problemId: Number(problemId), title: prob.title, userId, userName, language, createdAt: nowIso });
+    }
+  );
+});
+
+// Get submission detail
+app.get('/api/algos/submissions/:id', (req, res) => {
+  db.get('SELECT * FROM algo_submissions WHERE id = ?', [req.params.id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'Not found' });
+    res.json(row);
+  });
+});
+
+// Update submission (owner or admin)
+app.put('/api/algos/submissions/:id', requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const { code, language } = req.body || {};
+  if (code !== undefined && typeof code !== 'string') return res.status(400).json({ error: 'invalid code' });
+  if (language !== undefined && typeof language !== 'string') return res.status(400).json({ error: 'invalid language' });
+  db.get('SELECT * FROM algo_submissions WHERE id = ?', [id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'Not found' });
+    const isOwner = row.userId && req.session.user && Number(row.userId) === Number(req.session.user.id);
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+    if (!isOwner && !isAdmin) return res.status(403).json({ error: 'Forbidden' });
+    const newCode = code !== undefined ? code : row.code;
+    const newLang = language !== undefined ? language : row.language;
+    if (!newCode || !String(newCode).trim()) return res.status(400).json({ error: 'empty code not allowed' });
+    db.run('UPDATE algo_submissions SET code = ?, language = ? WHERE id = ?', [String(newCode), String(newLang), id], function (e2) {
+      if (e2) return res.status(500).json({ error: e2.message });
+      res.json({ success: this.changes > 0 });
+    });
+  });
+});
+
+// Delete submission (owner or admin)
+app.delete('/api/algos/submissions/:id', requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  db.get('SELECT * FROM algo_submissions WHERE id = ?', [id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'Not found' });
+    const isOwner = row.userId && req.session.user && Number(row.userId) === Number(req.session.user.id);
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+    if (!isOwner && !isAdmin) return res.status(403).json({ error: 'Forbidden' });
+    db.run('DELETE FROM algo_submissions WHERE id = ?', [id], function (e2) {
+      if (e2) return res.status(500).json({ error: e2.message });
+      // Also cascade delete comments for cleanliness
+      db.run('DELETE FROM algo_comments WHERE submissionId = ?', [id], function () {
+        res.json({ success: true });
+      });
+    });
+  });
+});
+
+// Fallback: update via POST (in case PUT is blocked upstream)
+app.post('/api/algos/submissions/:id/update', requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const { code, language } = req.body || {};
+  if (code !== undefined && typeof code !== 'string') return res.status(400).json({ error: 'invalid code' });
+  if (language !== undefined && typeof language !== 'string') return res.status(400).json({ error: 'invalid language' });
+  db.get('SELECT * FROM algo_submissions WHERE id = ?', [id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'Not found' });
+    const isOwner = row.userId && req.session.user && Number(row.userId) === Number(req.session.user.id);
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+    if (!isOwner && !isAdmin) return res.status(403).json({ error: 'Forbidden' });
+    const newCode = code !== undefined ? code : row.code;
+    const newLang = language !== undefined ? language : row.language;
+    if (!newCode || !String(newCode).trim()) return res.status(400).json({ error: 'empty code not allowed' });
+    db.run('UPDATE algo_submissions SET code = ?, language = ? WHERE id = ?', [String(newCode), String(newLang), id], function (e2) {
+      if (e2) return res.status(500).json({ error: e2.message });
+      res.json({ success: this.changes > 0 });
+    });
+  });
+});
+
+// Fallback: delete via POST (in case DELETE is blocked upstream)
+app.post('/api/algos/submissions/:id/delete', requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  db.get('SELECT * FROM algo_submissions WHERE id = ?', [id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'Not found' });
+    const isOwner = row.userId && req.session.user && Number(row.userId) === Number(req.session.user.id);
+    const isAdmin = req.session.user && req.session.user.role === 'admin';
+    if (!isOwner && !isAdmin) return res.status(403).json({ error: 'Forbidden' });
+    db.run('DELETE FROM algo_submissions WHERE id = ?', [id], function (e2) {
+      if (e2) return res.status(500).json({ error: e2.message });
+      db.run('DELETE FROM algo_comments WHERE submissionId = ?', [id], function () {
+        res.json({ success: true });
+      });
+    });
+  });
+});
+
+// Comments: list
+app.get('/api/algos/submissions/:id/comments', (req, res) => {
+  db.all('SELECT * FROM algo_comments WHERE submissionId = ? ORDER BY datetime(createdAt) ASC', [req.params.id], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows || []);
+  });
+});
+
+// Comments: create (supports threaded via optional parentId)
+app.post('/api/algos/submissions/:id/comments', (req, res) => {
+  const { content, parentId } = req.body || {};
+  if (!content || typeof content !== 'string') return res.status(400).json({ error: 'content required' });
+  const userId = (req.session && req.session.user && req.session.user.id) || null;
+  const userName = (req.session && req.session.user && (req.session.user.name || req.session.user.username)) || '익명';
+  const nowIso = new Date().toISOString();
+  db.run(
+    'INSERT INTO algo_comments(submissionId, userId, userName, content, parentId, createdAt) VALUES (?, ?, ?, ?, ?, ?)',
+    [req.params.id, userId, userName, content, parentId || null, nowIso],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID, submissionId: Number(req.params.id), userId, userName, content, parentId: parentId || null, createdAt: nowIso });
+    }
+  );
+});
+
+// =========================
+// ✅ Algorithms Activity Aggregation (Heatmap)
+// =========================
+// Returns per-day counts for current user: { 'YYYY-MM-DD': { solves: n, reviews: m } }
+app.get('/api/algos/activity', (req, res) => {
+  const userId = req.session && req.session.user && req.session.user.id;
+  if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+
+  // Range: from/to as YYYY-MM-DD (local). Defaults: last 52 weeks until today
+  const fmtLocal = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+  };
+  const toKey = (req.query && req.query.to && String(req.query.to)) || fmtLocal(new Date());
+  let fromKey = (req.query && req.query.from && String(req.query.from));
+  if (!fromKey) {
+    const [yy, mm, dd] = toKey.split('-').map(n => parseInt(n, 10));
+    const end = new Date(yy, (mm - 1), dd); // local midnight
+    const start = new Date(end);
+    start.setDate(start.getDate() - 7*52 + 1);
+    fromKey = fmtLocal(start);
+  }
+
+  const result = Object.create(null);
+
+  const fill = (rows, field) => {
+    for (const r of rows || []) {
+      const d = r.dateKey;
+      if (!result[d]) result[d] = { solves: 0, reviews: 0 };
+      result[d][field] = r.cnt || 0;
+    }
+  };
+
+  const sqlSolves = `
+    SELECT substr(datetime(createdAt,'localtime'),1,10) AS dateKey, COUNT(*) AS cnt
+    FROM algo_submissions
+    WHERE userId = ?
+      AND (substr(datetime(createdAt,'localtime'),1,10) BETWEEN ? AND ?)
+    GROUP BY dateKey
+    ORDER BY dateKey ASC
+  `;
+  const sqlReviews = `
+    SELECT substr(datetime(createdAt,'localtime'),1,10) AS dateKey, COUNT(*) AS cnt
+    FROM algo_comments
+    WHERE userId = ?
+      AND (substr(datetime(createdAt,'localtime'),1,10) BETWEEN ? AND ?)
+    GROUP BY dateKey
+    ORDER BY dateKey ASC
+  `;
+
+  db.all(sqlSolves, [userId, fromKey, toKey], (e1, rows1) => {
+    if (e1) return res.status(500).json({ error: e1.message });
+    fill(rows1, 'solves');
+    db.all(sqlReviews, [userId, fromKey, toKey], (e2, rows2) => {
+      if (e2) return res.status(500).json({ error: e2.message });
+      fill(rows2, 'reviews');
+      res.json({ from: fromKey, to: toKey, days: result });
+    });
   });
 });
 

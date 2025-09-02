@@ -24,6 +24,26 @@
     .status.pending { background: rgba(255,205,86,.25); color: #ffe28a; }
     .status.rejected { background: rgba(229,83,83,.25); color: #ffb0b0; }
     .avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: #111726; border: 1px solid rgba(255,255,255,.06); }
+    /* Heatmap */
+    .heatmap-wrap { display: grid; gap: 12px; }
+    .heatmap-title { color: #cfe3ff; font-weight: 700; margin: 4px 0; }
+    .heatmap { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 12px); grid-auto-columns: 12px; gap: 3px; }
+    .heatmap .cell { width: 12px; height: 12px; border-radius: 2px; background: #1f263a; border: 1px solid rgba(255,255,255,0.05); position: relative; }
+    .cell[data-count="0"] { background: #1f263a; }
+    /* Solves (green shades) */
+    .cell.solve.l1 { background: #0e4429; }
+    .cell.solve.l2 { background: #006d32; }
+    .cell.solve.l3 { background: #26a641; }
+    .cell.solve.l4 { background: #39d353; }
+    /* Reviews (yellow shades) */
+    .cell.review.l1 { background: #5a4b06; }
+    .cell.review.l2 { background: #8f6e00; }
+    .cell.review.l3 { background: #b88d00; }
+    .cell.review.l4 { background: #ffd33d; color: #111; }
+    .legend { display: flex; align-items: center; gap: 6px; color: #9fb3d9; font-size: 12px; }
+    .legend .swatch { width: 12px; height: 12px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.08); }
+    .tooltip { position: absolute; z-index: 10; background: #0b1220; color: #cfe3ff; font-size: 11px; padding: 6px 8px; border: 1px solid rgba(255,255,255,.08); border-radius: 6px; white-space: nowrap; transform: translate(-50%, -130%); pointer-events: none; opacity: 0; transition: opacity .15s; }
+    .cell:hover .tooltip { opacity: 1; }
   </style>
 </head>
 <body>
@@ -43,6 +63,38 @@
         </div>
         <div class="row" id="avatar-preview-row" style="margin-top:6px;">
           <img id="avatarPreview" class="avatar" alt="avatar"/>
+        </div>
+      </section>
+
+      <section class="card" id="algo-heatmap-card">
+        <h2>알고리즘 활동 잔디</h2>
+        <div class="heatmap-wrap">
+          <div>
+            <div class="heatmap-title">풀이(초록)</div>
+            <div id="heatmap-solves" class="heatmap" aria-label="solves heatmap"></div>
+            <div class="legend" aria-hidden="true">
+              Less
+              <span class="swatch" style="background:#1f263a"></span>
+              <span class="swatch" style="background:#0e4429"></span>
+              <span class="swatch" style="background:#006d32"></span>
+              <span class="swatch" style="background:#26a641"></span>
+              <span class="swatch" style="background:#39d353"></span>
+              More
+            </div>
+          </div>
+          <div>
+            <div class="heatmap-title">코드 리뷰(노랑)</div>
+            <div id="heatmap-reviews" class="heatmap" aria-label="reviews heatmap"></div>
+            <div class="legend" aria-hidden="true">
+              Less
+              <span class="swatch" style="background:#1f263a"></span>
+              <span class="swatch" style="background:#5a4b06"></span>
+              <span class="swatch" style="background:#8f6e00"></span>
+              <span class="swatch" style="background:#b88d00"></span>
+              <span class="swatch" style="background:#ffd33d"></span>
+              More
+            </div>
+          </div>
         </div>
       </section>
 
@@ -68,6 +120,8 @@
         <h2>내 신청 내역</h2>
         <div id="my-requests" class="list"></div>
       </section>
+
+      
     </div>
   </main>
 

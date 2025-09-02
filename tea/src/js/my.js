@@ -119,4 +119,75 @@ document.addEventListener('DOMContentLoaded', async () => {
   wireProfileForm();
   wireLeaveForm();
   await loadMyRequests();
+  await renderAlgoHeatmaps();
 });
+
+// ===== Algorithm heatmap (GitHub-like) =====
+async function renderAlgoHeatmaps() {
+  const solvesEl = document.getElementById('heatmap-solves');
+  const reviewsEl = document.getElementById('heatmap-reviews');
+  if (!solvesEl || !reviewsEl) return; // not on this page
+
+  let data;
+  try {
+    data = await fetchJSON('/api/algos/activity');
+  } catch (e) {
+    console.warn('활동 잔디 불러오기 실패:', e.message);
+    return;
+  }
+
+  const from = new Date(data.from + 'T00:00:00');
+  const to = new Date(data.to + 'T00:00:00');
+  // Build day list inclusive
+  const days = [];
+  for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+    days.push(new Date(d));
+  }
+  // Pad head so first column starts on Sunday
+  const headPad = (days[0]?.getDay() ?? 0); // 0=Sun
+  const padded = new Array(headPad).fill(null).concat(days);
+
+  const getKey = (dt) => {
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const d = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`; // local date key
+  };
+  const getLevel = (n, type) => {
+    // thresholds can be tuned later
+    if (!n || n <= 0) return '';
+    if (n === 1) return 'l1';
+    if (n <= 3) return 'l2';
+    if (n <= 6) return 'l3';
+    return 'l4';
+  };
+
+  const build = (container, type) => {
+    container.innerHTML = '';
+    for (const it of padded) {
+      const cell = document.createElement('div');
+      cell.className = 'cell ' + (type === 'solve' ? 'solve' : 'review');
+      if (it === null) {
+        // blank pad
+        cell.setAttribute('data-count', '0');
+        container.appendChild(cell);
+        continue;
+      }
+      const key = getKey(it);
+      const rec = data.days[key] || { solves: 0, reviews: 0 };
+      const cnt = type === 'solve' ? (rec.solves || 0) : (rec.reviews || 0);
+      const lvl = getLevel(cnt, type);
+      if (lvl) cell.classList.add(lvl);
+      cell.setAttribute('data-count', String(cnt));
+      // tooltip
+      const tip = document.createElement('div');
+      tip.className = 'tooltip';
+      tip.textContent = `${key} • ${type === 'solve' ? '풀이' : '리뷰'}: ${cnt}`;
+      cell.appendChild(tip);
+      container.appendChild(cell);
+    }
+  };
+
+  build(solvesEl, 'solve');
+  build(reviewsEl, 'review');
+}
