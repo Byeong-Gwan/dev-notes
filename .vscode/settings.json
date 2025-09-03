@@ -1,3 +1,7 @@
 {
-    "liveServer.settings.port": 5501
+    "liveServer.settings.port": 5501,
+    "java.project.sourcePaths": [
+        "Java공부/src",
+        "Java공부/out/basics/Java의 정석"
+    ]
 }
