@@ -12,11 +12,16 @@
     console.log(arrFindFrequency(arr));
 
     function arrFindFrequency (arr) {
-        const obj = {};
-        for (const key of arr) {
-            obj[key] = (obj[key] || 0) + 1;
-        }
-        return obj;
+        // const obj = {};
+        // for (const key of arr) {
+        //     obj[key] = (obj[key] || 0) + 1;
+        // }
+        // return obj;
+
+        return arr.reduce((acc, cur) => {
+            acc[cur] = (acc[cur] || 0) + 1;
+            return acc;
+        }, {});
     }
 
     // function arrFindFrequencyWithMap(arr) {
