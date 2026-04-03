@@ -37,9 +37,9 @@ function removeDuplicateUsers(users) {
     if (!Array.isArray(users)) {
         return [];
     }
-    
+
     const newInfo = [];
-    let obj = new Set();
+    const obj = new Set();
 
     for (const user of users){
         if (!obj.has(user.email)) {
@@ -52,3 +52,20 @@ function removeDuplicateUsers(users) {
 }
 
 console.log(removeDuplicateUsers(users));
+
+/**
+ * 입력은 사용자 객체 배열이다.
+ * email을 기준으로 중복을 제거해야 한다.
+ * 같은 email이 여러 개면 첫 번째 사용자만 유지한다.
+ * 최종적으로 중복이 제거된 새 배열을 반환한다.
+ * 
+ * 입력은 사용자 객체 배열입니다.
+ * email 기준으로 중복을 제거해야 하고, 같은 email이 여러 개면 먼저 나온 사용자만 유지하면 됩니다.
+ * 그래서 이미 본 email을 저장할 Set을 하나 만들고, 배열을 순회하면서 처음 나온 email만 결과 배열에 추가하겠습니다.
+ * 
+ * 결과 배열과 이미 본 email을 저장할 Set을 준비한다.
+ * 배열을 순회하면서 각 user의 email을 확인한다.
+ * 처음 나온 email이면 Set에 저장하고 결과 배열에 추가한다.
+ * 이미 본 email이면 추가하지 않는다.
+ * 최종적으로 결과 배열을 반환한다.
+ */
