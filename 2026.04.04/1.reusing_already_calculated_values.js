@@ -31,7 +31,7 @@
   ];
 
   function createCategoryCounter(products) {
-
+    const counter = {};
   }
 
   const getCount = createCategoryCounter(products);
