@@ -1,4 +1,4 @@
-/**
+/** 조건 문자열
  * 문제 설명
     문자열에 따라 다음과 같이 두 수의 크기를 비교하려고 합니다.
 
@@ -35,9 +35,10 @@
 */
 function solution(ineq, eq, n, m) {
     let result;
-    
+
     if (ineq === ">" && eq === "=") {
         result = n >= m;
+    } else if (ineq === "<" && eq === "=") {
         result = n <= m;
     } else if (ineq === ">" && eq === "!") {
         result = n > m;
